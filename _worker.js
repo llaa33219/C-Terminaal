@@ -4,36 +4,36 @@
 export default {
     // 모든 요청 처리
     async fetch(request, env, ctx) {
-      // CORS 헤더 설정
-      const corsHeaders = {
-        "Access-Control-Allow-Origin": "*", // 실제 배포 시 정확한 도메인으로 제한 권장
-        "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-        "Access-Control-Max-Age": "86400",
-      };
-  
-      // OPTIONS 요청 처리 (CORS preflight)
-      if (request.method === "OPTIONS") {
-        return new Response(null, {
-          headers: corsHeaders,
-        });
-      }
-  
       // URL 분석
       const url = new URL(request.url);
       
       // API 요청만 처리
       if (url.pathname.startsWith('/api/')) {
-        return await handleApiRequest(request, env, corsHeaders);
+        return await handleApiRequest(request, env);
       }
       
-      // 정적 자산 요청은 Pages 로 전달
+      // 정적 자산 요청은 Pages 기본 처리로 전달
       return env.ASSETS.fetch(request);
     }
   };
   
   // API 요청 처리 함수
-  async function handleApiRequest(request, env, corsHeaders) {
+  async function handleApiRequest(request, env) {
+    // CORS 헤더 설정
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*", // 실제 배포 시 정확한 도메인으로 제한 권장
+      "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+      "Access-Control-Max-Age": "86400",
+    };
+  
+    // OPTIONS 요청 처리 (CORS preflight)
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: corsHeaders,
+      });
+    }
+    
     try {
       const url = new URL(request.url);
       
@@ -47,9 +47,6 @@ export default {
           headers: corsHeaders
         });
       }
-      
-      // 기본 인증 확인 (실제 배포 시 보다 강력한 인증 필요)
-      // 현재는 간단한 데모 목적으로 기본 인증 검사는 생략됨
       
       // HTTP 메서드에 따른 처리
       if (request.method === "GET") {
@@ -102,8 +99,8 @@ export default {
       } 
       else if (request.method === "POST" && path === "list") {
         // 특정 경로의 파일 목록 가져오기
-        const prefix = new URL(request.url).searchParams.get("prefix") || "";
-        const delimiter = new URL(request.url).searchParams.get("delimiter") || "/";
+        const prefix = url.searchParams.get("prefix") || "";
+        const delimiter = url.searchParams.get("delimiter") || "/";
         
         const listed = await env.R2_BUCKET.list({
           prefix: prefix,
