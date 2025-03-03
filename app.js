@@ -1,72 +1,100 @@
 // 터미널 초기화 함수 (별도로 분리하여 initPlayground에서 호출)
 function initTerminal() {
-    try {
-        console.log('터미널 초기화 시도:', typeof Terminal);
-        
-        // 터미널 초기화
-        terminal = new Terminal({
-            cursorBlink: true,
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 14,
-            theme: {
-                background: '#1e1e1e',
-                foreground: '#f8f8f8',
-                cursor: '#f8f8f8'
+    // 먼저 가상 터미널 객체 생성 (항상 기본 제공)
+    terminal = {
+        writeln: function(text) {
+            console.log('Terminal output:', text);
+            const terminalElement = document.getElementById('terminal');
+            if (terminalElement) {
+                const line = document.createElement('div');
+                line.textContent = text;
+                line.style.color = 'white';
+                line.style.fontFamily = 'monospace';
+                line.style.padding = '2px 10px';
+                terminalElement.appendChild(line);
             }
-        });
-        
-        const terminalElement = document.getElementById('terminal');
-        if (terminalElement) {
-            terminal.open(terminalElement);
-            terminal.writeln('C-Terminal v1.0');
-            terminal.writeln('터미널이 준비되었습니다.');
-            terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
-            terminal.writeln('');
+        },
+        clear: function() {
+            const terminalElement = document.getElementById('terminal');
+            if (terminalElement) {
+                terminalElement.innerHTML = '';
+            }
+        },
+        open: function(element) {
+            console.log('Opening virtual terminal in element:', element);
+            // 가상 터미널 기본 스타일 적용
+            if (element) {
+                element.style.backgroundColor = '#1e1e1e';
+                element.style.color = '#f8f8f8';
+                element.style.padding = '10px';
+                element.style.fontFamily = 'monospace';
+                element.style.height = '100%';
+                element.style.overflowY = 'auto';
+            }
+        }
+    };
+    
+    try {
+        // Terminal 객체가 존재하는지 확인
+        if (typeof window !== 'undefined' && window.Terminal) {
+            console.log('실제 터미널 사용 시도 (window.Terminal)');
+            // 실제 Terminal 객체 사용
+            const realTerminal = new window.Terminal({
+                cursorBlink: true,
+                fontFamily: 'monospace',
+                fontSize: 14,
+                theme: {
+                    background: '#1e1e1e',
+                    foreground: '#f8f8f8',
+                    cursor: '#f8f8f8'
+                }
+            });
             
-            return true;
+            // 기본 메서드 백업
+            const virtualWriteln = terminal.writeln;
+            const virtualClear = terminal.clear;
+            
+            // 실제 Terminal 객체로 메서드 교체
+            terminal.open = function(element) {
+                realTerminal.open(element);
+            };
+            
+            terminal.writeln = function(text) {
+                try {
+                    realTerminal.writeln(text);
+                } catch (e) {
+                    console.error('실제 터미널 writeln 오류:', e);
+                    virtualWriteln(text);
+                }
+            };
+            
+            terminal.clear = function() {
+                try {
+                    realTerminal.clear();
+                } catch (e) {
+                    console.error('실제 터미널 clear 오류:', e);
+                    virtualClear();
+                }
+            };
         }
     } catch (error) {
         console.error('터미널 초기화 오류:', error);
+        // 이미 가상 터미널을 생성했으므로 아무것도 하지 않음
+    }
+    
+    // 터미널 열기
+    const terminalElement = document.getElementById('terminal');
+    if (terminalElement) {
+        terminal.open(terminalElement);
         
-        // 가상 터미널 객체 생성 (폴백)
-        const terminalElement = document.getElementById('terminal');
-        if (terminalElement) {
-            terminalElement.innerHTML = '<div style="color: white; padding: 10px; font-family: monospace;">터미널을 초기화할 수 없습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
-        }
-        
-        // 가상 터미널 객체 제공
-        terminal = {
-            writeln: function(text) {
-                console.log('Terminal output:', text);
-                const terminalElement = document.getElementById('terminal');
-                if (terminalElement) {
-                    const line = document.createElement('div');
-                    line.textContent = text;
-                    line.style.color = 'white';
-                    line.style.fontFamily = 'monospace';
-                    line.style.padding = '2px 10px';
-                    terminalElement.appendChild(line);
-                }
-            },
-            clear: function() {
-                const terminalElement = document.getElementById('terminal');
-                if (terminalElement) {
-                    terminalElement.innerHTML = '';
-                }
-            },
-            open: function(element) {
-                console.log('Opening virtual terminal in element:', element);
-            }
-        };
-        
-        // 최소한의 출력 제공
+        // 기본 출력
         terminal.writeln('C-Terminal v1.0');
         terminal.writeln('터미널이 준비되었습니다.');
         terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
         terminal.writeln('');
     }
     
-    return false;
+    return terminal;
 }// 스크립트 로딩을 확인하고 지연 초기화하는 함수
 function ensureScriptsLoaded() {
     // XTerm 라이브러리 로딩 확인
@@ -681,27 +709,45 @@ function runCode() {
     // 터미널 지우기
     clearTerminal();
     
-    // Blockly에서 JavaScript 코드 생성
-    const code = Blockly.JavaScript.workspaceToCode(workspace);
-    
-    // 코드 실행 준비 (터미널 출력용 함수 오버라이드)
-    const originalConsoleLog = console.log;
-    console.log = function() {
-        const args = Array.from(arguments);
-        terminal.writeln(args.join(' '));
-    };
-    
-    // 안전한 코드 실행을 위한 래퍼 함수
     try {
-        // 코드 실행
-        eval(code);
-        terminal.writeln('\n프로그램이 성공적으로 실행되었습니다.');
-    } catch (error) {
-        terminal.writeln(`\n오류 발생: ${error.message}`);
-    } finally {
-        // console.log 복원
-        console.log = originalConsoleLog;
+        // Blockly에서 JavaScript 코드 생성
+        const code = Blockly.JavaScript.workspaceToCode(workspace);
         
+        // 코드 실행 준비 (터미널 출력용 함수 오버라이드)
+        const originalConsoleLog = console.log;
+        console.log = function() {
+            const args = Array.from(arguments);
+            if (terminal && terminal.writeln) {
+                terminal.writeln(args.join(' '));
+            } else {
+                originalConsoleLog.apply(console, args);
+            }
+        };
+        
+        // 안전한 코드 실행을 위한 래퍼 함수
+        try {
+            // 코드 실행
+            eval(code);
+            if (terminal && terminal.writeln) {
+                terminal.writeln('\n프로그램이 성공적으로 실행되었습니다.');
+            }
+        } catch (error) {
+            if (terminal && terminal.writeln) {
+                terminal.writeln(`\n오류 발생: ${error.message}`);
+            } else {
+                console.error('코드 실행 오류:', error);
+            }
+        } finally {
+            // console.log 복원
+            console.log = originalConsoleLog;
+        }
+    } catch (error) {
+        console.error('Blockly 코드 생성 오류:', error);
+        // 터미널에 오류 표시
+        if (terminal && terminal.writeln) {
+            terminal.writeln(`\n오류 발생: Blockly 코드를 생성할 수 없습니다.`);
+        }
+    } finally {
         // 실행 완료 상태로 변경
         isRunning = false;
         document.getElementById('run-btn').innerHTML = '<i class="fas fa-play"></i> 실행';
