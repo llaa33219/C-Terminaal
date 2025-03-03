@@ -1,4 +1,118 @@
-// 터미널 초기화 함수 (별도로 분리하여 initPlayground에서 호출)
+// 터미널 내에서 작동하는 브라우저 대화상자 오버라이드
+function overrideBrowserDialogs() {
+    // 원본 함수 백업
+    const originalAlert = window.alert;
+    const originalPrompt = window.prompt;
+    const originalConfirm = window.confirm;
+    
+    // alert 오버라이드
+    window.alert = function(message) {
+        if (terminal && terminal.writeln) {
+            terminal.writeln('\n[알림] ' + message);
+            terminal.writeln('----- 계속하려면 Enter 키를 누르세요 -----');
+            
+            return new Promise((resolve) => {
+                createTerminalInput(function() {
+                    resolve();
+                    terminal.writeln('');
+                });
+            });
+        } else {
+            return originalAlert(message);
+        }
+    };
+    
+    // prompt 오버라이드
+    window.prompt = function(message, defaultValue = '') {
+        if (terminal && terminal.writeln) {
+            return terminalPrompt(message, defaultValue);
+        } else {
+            return originalPrompt(message, defaultValue);
+        }
+    };
+    
+    // confirm 오버라이드
+    window.confirm = function(message) {
+        if (terminal && terminal.writeln) {
+            return terminalConfirm(message);
+        } else {
+            return originalConfirm(message);
+        }
+    };
+    
+    // 터미널에서 prompt 대화상자 구현
+    function terminalPrompt(message, defaultValue) {
+        return new Promise((resolve) => {
+            terminal.writeln('\n[입력] ' + message);
+            terminal.writeln(`(기본값: ${defaultValue || '없음'})`);
+            
+            createTerminalInput(function(value) {
+                const result = value || defaultValue;
+                terminal.writeln(`입력값: ${result}`);
+                resolve(result);
+            });
+        });
+    }
+    
+    // 터미널에서 confirm 대화상자 구현
+    function terminalConfirm(message) {
+        return new Promise((resolve) => {
+            terminal.writeln('\n[확인] ' + message);
+            terminal.writeln('(Y/N 또는 예/아니오로 답변하세요)');
+            
+            createTerminalInput(function(value) {
+                const lowerValue = value.toLowerCase();
+                const isConfirmed = lowerValue === 'y' || lowerValue === 'yes' || lowerValue === '예';
+                terminal.writeln(`응답: ${isConfirmed ? '예' : '아니오'}`);
+                resolve(isConfirmed);
+            });
+        });
+    }
+    
+    // 터미널 입력창 생성 함수
+    function createTerminalInput(callback) {
+        const terminalElement = document.getElementById('terminal');
+        if (!terminalElement) {
+            callback('');
+            return;
+        }
+        
+        // 입력 컨테이너 생성
+        const inputContainer = document.createElement('div');
+        inputContainer.className = 'terminal-input-container';
+        
+        // 프롬프트 표시
+        const prompt = document.createElement('span');
+        prompt.className = 'terminal-prompt';
+        prompt.textContent = '>';
+        inputContainer.appendChild(prompt);
+        
+        // 입력 필드
+        const input = document.createElement('input');
+        input.className = 'terminal-input';
+        input.type = 'text';
+        inputContainer.appendChild(input);
+        
+        // 터미널에 추가
+        terminalElement.appendChild(inputContainer);
+        
+        // 포커스
+        input.focus();
+        
+        // 이벤트 리스너
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const value = input.value;
+                
+                // 입력 컨테이너 제거
+                inputContainer.remove();
+                
+                // 콜백 실행
+                callback(value);
+            }
+        });
+    }
+}// 터미널 초기화 함수 (별도로 분리하여 initPlayground에서 호출)
 function initTerminal() {
     // 먼저 가상 터미널 객체 생성 (항상 기본 제공)
     terminal = {
@@ -686,6 +800,13 @@ function initPlayground() {
         
         // 터미널 지우기 버튼 이벤트 리스너
         document.getElementById('clear-terminal-btn').addEventListener('click', clearTerminal);
+        
+        // 리사이징 핸들 초기화
+        initResizeHandle();
+        
+        // 브라우저 alert/prompt/confirm 오버라이드
+        overrideBrowserDialogs();
+        
     } catch (error) {
         console.error('플레이그라운드 초기화 오류:', error);
         const blocklyContainer = document.getElementById('blockly-container');
@@ -695,8 +816,89 @@ function initPlayground() {
     }
 }
 
+// 리사이징 핸들 초기화
+function initResizeHandle() {
+    const resizeHandle = document.getElementById('resize-handle');
+    const blocklyContainer = document.getElementById('blockly-container');
+    const terminalContainer = document.querySelector('.terminal-container');
+    const playgroundContent = document.querySelector('.playground-content');
+    
+    if (!resizeHandle || !blocklyContainer || !terminalContainer || !playgroundContent) {
+        console.error('리사이징 핸들 초기화 실패: 필요한 요소를 찾을 수 없습니다');
+        return;
+    }
+    
+    let isResizing = false;
+    let initialX;
+    let initialBlocklyWidth;
+    let initialTerminalWidth;
+    
+    // 핸들 위치 초기화
+    function updateHandlePosition() {
+        const blocklyRect = blocklyContainer.getBoundingClientRect();
+        resizeHandle.style.left = `${blocklyRect.width}px`;
+    }
+    
+    // 초기 핸들 위치 설정
+    updateHandlePosition();
+    
+    // 화면 크기 변경 시 핸들 위치 업데이트
+    window.addEventListener('resize', updateHandlePosition);
+    
+    // 마우스 이벤트 핸들러
+    resizeHandle.addEventListener('mousedown', startResize);
+    
+    function startResize(e) {
+        isResizing = true;
+        initialX = e.clientX;
+        initialBlocklyWidth = blocklyContainer.offsetWidth;
+        initialTerminalWidth = terminalContainer.offsetWidth;
+        
+        resizeHandle.classList.add('active');
+        
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+        
+        // 선택 방지
+        e.preventDefault();
+    }
+    
+    function resize(e) {
+        if (!isResizing) return;
+        
+        const deltaX = e.clientX - initialX;
+        const totalWidth = playgroundContent.offsetWidth;
+        
+        // 새 너비 계산 (최소 너비 제한)
+        const newBlocklyWidth = Math.max(100, Math.min(totalWidth - 100, initialBlocklyWidth + deltaX));
+        const newTerminalWidth = totalWidth - newBlocklyWidth - resizeHandle.offsetWidth;
+        
+        // 너비 적용
+        blocklyContainer.style.width = `${newBlocklyWidth}px`;
+        blocklyContainer.style.flex = '0 0 auto';
+        terminalContainer.style.width = `${newTerminalWidth}px`;
+        terminalContainer.style.flex = '0 0 auto';
+        
+        // 핸들 위치 업데이트
+        resizeHandle.style.left = `${newBlocklyWidth}px`;
+        
+        // Blockly 크기 조정 시 리렌더링
+        if (workspace) {
+            Blockly.svgResize(workspace);
+        }
+    }
+    
+    function stopResize() {
+        isResizing = false;
+        resizeHandle.classList.remove('active');
+        
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+    }
+}
+
 // 코드 실행 함수
-function runCode() {
+async function runCode() {
     // 이미 실행 중인 경우 중단
     if (isRunning) {
         return;
@@ -726,8 +928,16 @@ function runCode() {
         
         // 안전한 코드 실행을 위한 래퍼 함수
         try {
+            // 코드 실행 - 비동기 코드가 있을 수 있으므로 감싸기
+            const asyncWrapper = `
+                (async function() {
+                    ${code}
+                })();
+            `;
+            
             // 코드 실행
-            eval(code);
+            await eval(asyncWrapper);
+            
             if (terminal && terminal.writeln) {
                 terminal.writeln('\n프로그램이 성공적으로 실행되었습니다.');
             }

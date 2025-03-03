@@ -461,12 +461,15 @@ img {
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
 }
 
 #blockly-container {
     flex: 3;
     background-color: var(--blockly-bg);
     border-right: 1px solid var(--blockly-border);
+    overflow: hidden;
+    min-width: 100px;
 }
 
 .terminal-container {
@@ -475,6 +478,8 @@ img {
     flex-direction: column;
     background-color: var(--terminal-bg);
     color: var(--terminal-text);
+    min-width: 100px;
+    overflow: hidden;
 }
 
 .terminal-header {
@@ -493,6 +498,47 @@ img {
     overflow: auto;
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
+}
+
+/* 리사이징 핸들 */
+.resize-handle {
+    width: 8px;
+    background-color: var(--border-color);
+    cursor: col-resize;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+    transition: background-color 0.2s;
+}
+
+.resize-handle:hover, 
+.resize-handle.active {
+    background-color: var(--primary-color);
+}
+
+/* 터미널 입력 프롬프트 */
+.terminal-input-container {
+    display: flex;
+    padding: 4px;
+    margin-top: 4px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.terminal-prompt {
+    color: var(--primary-light);
+    margin-right: 8px;
+}
+
+.terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--terminal-text);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    outline: none;
 }
 
 /* 커뮤니티 섹션 */
