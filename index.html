@@ -364,11 +364,13 @@
     </footer>
 
     <!-- 애플리케이션 스크립트 -->
-    <script src="profile.js"></script>
-    <script src="app.js"></script>
-    <script src="blockly-config.js"></script>
-    <script src="terminal.js"></script>
-    <script src="storage.js"></script>
-    <script src="community.js"></script>    
-</body>
+<!-- Firebase SDK 로드 후, app.js에서 초기화 -->
+<script src="app.js"></script>
+<!-- 그 후에 profile.js를 로드 -->
+<script src="profile.js"></script>
+<!-- 다른 스크립트들 -->
+<script src="blockly-config.js"></script>
+<script src="terminal.js"></script>
+<script src="storage.js"></script>
+<script src="community.js"></script>
 </html>
