@@ -1,1 +1,26 @@
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 배경 원 -->
+  <circle cx="50" cy="50" r="45" fill="#0070f3" />
+  
+  <!-- 터미널 프레임 -->
+  <rect x="20" y="25" width="60" height="50" rx="5" ry="5" fill="#ffffff" />
+  
+  <!-- 터미널 화면 -->
+  <rect x="25" y="35" width="50" height="35" rx="2" ry="2" fill="#1e1e1e" />
+  
+  <!-- 터미널 제목 표시줄 점 -->
+  <circle cx="30" cy="30" r="2.5" fill="#ff5f57" />
+  <circle cx="40" cy="30" r="2.5" fill="#ffbd2e" />
+  <circle cx="50" cy="30" r="2.5" fill="#28c941" />
+  
+  <!-- 커서와 코드 블록 (터미널 내부) -->
+  <rect x="30" y="42" width="15" height="5" rx="1" ry="1" fill="#5CA65C" />
+  <rect x="30" y="52" width="20" height="5" rx="1" ry="1" fill="#A65CA6" />
+  <rect x="35" y="62" width="25" height="5" rx="1" ry="1" fill="#5C81A6" />
+  
+  <!-- 깜박이는 커서 (터미널 내부) -->
+  <rect x="60" y="52" width="2" height="10" fill="#ffffff" />
+  
+  <!-- C-Terminal 텍스트 (로고 아래) -->
+  <text x="50" y="92" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" text-anchor="middle" fill="#ffffff">C-Terminal</text>
+</svg>

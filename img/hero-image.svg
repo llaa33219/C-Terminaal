@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <!-- 배경 -->
+  <rect x="0" y="0" width="600" height="400" rx="20" ry="20" fill="#f8f9fa" />
+  
+  <!-- 편집기 패널 -->
+  <rect x="50" y="50" width="320" height="300" rx="10" ry="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+  
+  <!-- 터미널 패널 -->
+  <rect x="390" y="50" width="160" height="300" rx="10" ry="10" fill="#1e1e1e" stroke="#333333" stroke-width="2" />
+  
+  <!-- 블록코드 예시 -->
+  <g transform="translate(70, 80)">
+    <!-- 시작 블록 -->
+    <rect x="0" y="0" width="120" height="40" rx="5" ry="5" fill="#5C81A6" />
+    <text x="60" y="25" font-family="Arial" font-size="14" text-anchor="middle" fill="white">프로그램 시작</text>
+    
+    <!-- 반복 블록 -->
+    <rect x="20" y="50" width="150" height="40" rx="5" ry="5" fill="#5CA65C" />
+    <text x="95" y="75" font-family="Arial" font-size="14" text-anchor="middle" fill="white">5번 반복하기</text>
+    
+    <!-- 텍스트 출력 블록 -->
+    <rect x="40" y="100" width="200" height="40" rx="5" ry="5" fill="#A65CA6" />
+    <text x="140" y="125" font-family="Arial" font-size="14" text-anchor="middle" fill="white">"안녕하세요!" 출력하기</text>
+    
+    <!-- 변수 블록 -->
+    <rect x="40" y="150" width="180" height="40" rx="5" ry="5" fill="#A6745C" />
+    <text x="130" y="175" font-family="Arial" font-size="14" text-anchor="middle" fill="white">카운터 변수 출력하기</text>
+    
+    <!-- 종료 블록 -->
+    <rect x="20" y="200" width="120" height="40" rx="5" ry="5" fill="#745CA6" />
+    <text x="80" y="225" font-family="Arial" font-size="14" text-anchor="middle" fill="white">종료</text>
+  </g>
+  
+  <!-- 터미널 내용 -->
+  <text x="405" y="80" font-family="Courier New" font-size="14" fill="#f8f8f8">C-Terminal v1.0</text>
+  <text x="405" y="100" font-family="Courier New" font-size="14" fill="#f8f8f8">실행 결과:</text>
+  <text x="405" y="130" font-family="Courier New" font-size="14" fill="#f8f8f8">안녕하세요!</text>
+  <text x="405" y="150" font-family="Courier New" font-size="14" fill="#f8f8f8">안녕하세요!</text>
+  <text x="405" y="170" font-family="Courier New" font-size="14" fill="#f8f8f8">안녕하세요!</text>
+  <text x="405" y="190" font-family="Courier New" font-size="14" fill="#f8f8f8">안녕하세요!</text>
+  <text x="405" y="210" font-family="Courier New" font-size="14" fill="#f8f8f8">안녕하세요!</text>
+  <text x="405" y="230" font-family="Courier New" font-size="14" fill="#f8f8f8">1</text>
+  <text x="405" y="250" font-family="Courier New" font-size="14" fill="#f8f8f8">2</text>
+  <text x="405" y="270" font-family="Courier New" font-size="14" fill="#f8f8f8">3</text>
+  <text x="405" y="290" font-family="Courier New" font-size="14" fill="#f8f8f8">4</text>
+  <text x="405" y="310" font-family="Courier New" font-size="14" fill="#f8f8f8">5</text>
+  
+  <!-- 연결선 -->
+  <path d="M 130 40 L 130 50" stroke="#888888" stroke-width="2" />
+  <path d="M 95 90 L 95 100" stroke="#888888" stroke-width="2" />
+  <path d="M 140 140 L 140 150" stroke="#888888" stroke-width="2" />
+  <path d="M 130 190 L 130 200" stroke="#888888" stroke-width="2" />
+</svg>
