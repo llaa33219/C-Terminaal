@@ -23,11 +23,11 @@ const STORAGE_KEYS = {
     COMMUNITY_POSTS: 'c-terminal-community-posts'
 };
 
-// R2 버킷 관련 설정 (실제 구현 시에는 여기에 Cloudflare 연동 코드 필요)
+// R2 버킷 관련 설정
 const R2_CONFIG = {
-    bucketName: 'c-terminal-storage',
-    endpoint: 'https://your-cloudflare-r2-endpoint.com',
-    // 실제 구현에서는 인증 관련 정보 추가
+    bucketName: 'c-terminaal-storage', // 사용자가 지정한 버킷 이름
+    endpoint: '/api', // _worker.js를 통한 API 엔드포인트
+    apiKey: 'c-terminaal-api-key' // API 키 (실제 운영 환경에서는 더 강력한 인증 필요)
 };
 
 // DOM이 로드된 후 실행
