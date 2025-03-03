@@ -1,4 +1,96 @@
-// C-Terminal 애플리케이션 JavaScript
+// 터미널 초기화 함수 (별도로 분리하여 initPlayground에서 호출)
+function initTerminal() {
+    try {
+        console.log('터미널 초기화 시도:', typeof Terminal);
+        
+        // 터미널 초기화
+        terminal = new Terminal({
+            cursorBlink: true,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 14,
+            theme: {
+                background: '#1e1e1e',
+                foreground: '#f8f8f8',
+                cursor: '#f8f8f8'
+            }
+        });
+        
+        const terminalElement = document.getElementById('terminal');
+        if (terminalElement) {
+            terminal.open(terminalElement);
+            terminal.writeln('C-Terminal v1.0');
+            terminal.writeln('터미널이 준비되었습니다.');
+            terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
+            terminal.writeln('');
+            
+            return true;
+        }
+    } catch (error) {
+        console.error('터미널 초기화 오류:', error);
+        
+        // 가상 터미널 객체 생성 (폴백)
+        const terminalElement = document.getElementById('terminal');
+        if (terminalElement) {
+            terminalElement.innerHTML = '<div style="color: white; padding: 10px; font-family: monospace;">터미널을 초기화할 수 없습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
+        }
+        
+        // 가상 터미널 객체 제공
+        terminal = {
+            writeln: function(text) {
+                console.log('Terminal output:', text);
+                const terminalElement = document.getElementById('terminal');
+                if (terminalElement) {
+                    const line = document.createElement('div');
+                    line.textContent = text;
+                    line.style.color = 'white';
+                    line.style.fontFamily = 'monospace';
+                    line.style.padding = '2px 10px';
+                    terminalElement.appendChild(line);
+                }
+            },
+            clear: function() {
+                const terminalElement = document.getElementById('terminal');
+                if (terminalElement) {
+                    terminalElement.innerHTML = '';
+                }
+            },
+            open: function(element) {
+                console.log('Opening virtual terminal in element:', element);
+            }
+        };
+        
+        // 최소한의 출력 제공
+        terminal.writeln('C-Terminal v1.0');
+        terminal.writeln('터미널이 준비되었습니다.');
+        terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
+        terminal.writeln('');
+    }
+    
+    return false;
+}// 스크립트 로딩을 확인하고 지연 초기화하는 함수
+function ensureScriptsLoaded() {
+    // XTerm 라이브러리 로딩 확인
+    if (typeof Terminal === 'undefined') {
+        console.log('XTerm 라이브러리 로딩 중...');
+        // 500ms 후에 다시 확인
+        setTimeout(ensureScriptsLoaded, 500);
+        return;
+    }
+    
+    console.log('모든 스크립트가 로드되었습니다.');
+    
+    // 네비게이션 페이지 전환 이벤트 추가
+    document.getElementById('nav-playground').addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('playground-section');
+        initPlayground();
+    });
+    
+    document.getElementById('get-started-btn').addEventListener('click', () => {
+        showSection('playground-section');
+        initPlayground();
+    });
+}// C-Terminal 애플리케이션 JavaScript
 
 // Blockly 및 터미널 환경 초기화
 let workspace;
@@ -56,25 +148,48 @@ function initNavigation() {
     document.getElementById('nav-playground').addEventListener('click', (e) => {
         e.preventDefault();
         showSection('playground-section');
-        initPlayground();
+        
+        // Terminal 존재 여부에 관계없이 플레이그라운드 초기화 시도
+        setTimeout(() => {
+            try {
+                initPlayground();
+            } catch (error) {
+                console.error('플레이그라운드 초기화 오류:', error);
+            }
+        }, 100);
     });
     
     document.getElementById('nav-community').addEventListener('click', (e) => {
         e.preventDefault();
         showSection('community-section');
-        loadCommunityPosts();
+        try {
+            loadCommunityPosts();
+        } catch (error) {
+            console.error('커뮤니티 로드 오류:', error);
+        }
     });
     
     document.getElementById('nav-explore').addEventListener('click', (e) => {
         e.preventDefault();
         showSection('explore-section');
-        loadExploreProjects();
+        try {
+            loadExploreProjects();
+        } catch (error) {
+            console.error('프로젝트 탐색 오류:', error);
+        }
     });
     
     // 시작하기 버튼
     document.getElementById('get-started-btn').addEventListener('click', () => {
         showSection('playground-section');
-        initPlayground();
+        // Terminal 존재 여부에 관계없이 플레이그라운드 초기화 시도
+        setTimeout(() => {
+            try {
+                initPlayground();
+            } catch (error) {
+                console.error('플레이그라운드 초기화 오류:', error);
+            }
+        }, 100);
     });
     
     // 더 알아보기 버튼
@@ -105,13 +220,28 @@ function initNavigation() {
 
 // 섹션 표시 함수
 function showSection(sectionId) {
+    console.log('섹션 전환:', sectionId);
+    
     // 모든 섹션 숨기기
     document.querySelectorAll('.section').forEach(section => {
-        section.classList.add('hidden');
+        if (section.style) {
+            section.style.display = 'none';
+        } else {
+            section.setAttribute('style', 'display: none;');
+        }
     });
     
     // 선택한 섹션 표시
-    document.getElementById(sectionId).classList.remove('hidden');
+    const selectedSection = document.getElementById(sectionId);
+    if (selectedSection) {
+        if (selectedSection.style) {
+            selectedSection.style.display = '';
+        } else {
+            selectedSection.setAttribute('style', 'display: block;');
+        }
+    } else {
+        console.error('섹션을 찾을 수 없음:', sectionId);
+    }
     
     // 네비게이션 링크 업데이트
     document.querySelectorAll('.nav-links a').forEach(link => {
@@ -488,110 +618,53 @@ function initPlayground() {
         ]
     };
     
-    // Blockly 초기화
-    workspace = Blockly.inject('blockly-container', {
-        toolbox: toolbox,
-        scrollbars: true,
-        horizontalLayout: false,
-        trashcan: true,
-        zoom: {
-            controls: true,
-            wheel: true,
-            startScale: 1.0,
-            maxScale: 3,
-            minScale: 0.3,
-            scaleSpeed: 1.2
-        },
-        grid: {
-            spacing: 20,
-            length: 3,
-            colour: '#ccc',
-            snap: true
-        }
-    });
-    
-    // 저장된 프로젝트 불러오기
-    loadCurrentProject();
-    
-    // 터미널 초기화 (XTerm 객체가 존재하는지 확인)
-    if (typeof window.Terminal !== 'undefined') {
-        // window.Terminal 사용
-        terminal = new window.Terminal({
-            cursorBlink: true,
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 14,
-            theme: {
-                background: '#1e1e1e',
-                foreground: '#f8f8f8',
-                cursor: '#f8f8f8'
+    try {
+        // Blockly 초기화
+        workspace = Blockly.inject('blockly-container', {
+            toolbox: toolbox,
+            scrollbars: true,
+            horizontalLayout: false,
+            trashcan: true,
+            zoom: {
+                controls: true,
+                wheel: true,
+                startScale: 1.0,
+                maxScale: 3,
+                minScale: 0.3,
+                scaleSpeed: 1.2
+            },
+            grid: {
+                spacing: 20,
+                length: 3,
+                colour: '#ccc',
+                snap: true
             }
         });
-    } else if (typeof Terminal !== 'undefined') {
-        // 전역 Terminal 사용
-        terminal = new Terminal({
-            cursorBlink: true,
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 14,
-            theme: {
-                background: '#1e1e1e',
-                foreground: '#f8f8f8',
-                cursor: '#f8f8f8'
-            }
-        });
-    } else {
-        // XTerm 라이브러리가 로드되지 않은 경우 대체 UI 제공
-        console.error('XTerm 라이브러리를 찾을 수 없습니다.');
-        const terminalElement = document.getElementById('terminal');
-        if (terminalElement) {
-            terminalElement.innerHTML = '<div style="color: white; padding: 10px;">터미널을 초기화할 수 없습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
-        }
         
-        // 가상 터미널 객체 제공 (오류 방지)
-        terminal = {
-            writeln: function(text) {
-                console.log('Terminal output:', text);
-                const terminalElement = document.getElementById('terminal');
-                if (terminalElement) {
-                    const line = document.createElement('div');
-                    line.textContent = text;
-                    terminalElement.appendChild(line);
-                }
-            },
-            clear: function() {
-                const terminalElement = document.getElementById('terminal');
-                if (terminalElement) {
-                    terminalElement.innerHTML = '';
-                }
-            },
-            open: function(element) {
-                console.log('Opening virtual terminal in element:', element);
-            }
-        };
-    }
-    
-    // 실제 터미널 객체가 있는 경우에만 열기
-    if (terminal.open && typeof terminal.open === 'function') {
-        const terminalElement = document.getElementById('terminal');
-        if (terminalElement) {
-            terminal.open(terminalElement);
-            terminal.writeln('C-Terminal v1.0');
-            terminal.writeln('터미널이 준비되었습니다.');
-            terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
-            terminal.writeln('');
+        // 저장된 프로젝트 불러오기
+        loadCurrentProject();
+        
+        // 터미널 초기화
+        initTerminal();
+        
+        // 실행 버튼 이벤트 리스너
+        document.getElementById('run-btn').addEventListener('click', runCode);
+        
+        // 저장 버튼 이벤트 리스너
+        document.getElementById('save-btn').addEventListener('click', saveProject);
+        
+        // 프로젝트 제목 변경 이벤트 리스너
+        document.getElementById('project-title').addEventListener('change', updateProjectTitle);
+        
+        // 터미널 지우기 버튼 이벤트 리스너
+        document.getElementById('clear-terminal-btn').addEventListener('click', clearTerminal);
+    } catch (error) {
+        console.error('플레이그라운드 초기화 오류:', error);
+        const blocklyContainer = document.getElementById('blockly-container');
+        if (blocklyContainer) {
+            blocklyContainer.innerHTML = '<div style="padding: 20px; color: #333;">Blockly를 초기화할 수 없습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
         }
     }
-    
-    // 실행 버튼 이벤트 리스너
-    document.getElementById('run-btn').addEventListener('click', runCode);
-    
-    // 저장 버튼 이벤트 리스너
-    document.getElementById('save-btn').addEventListener('click', saveProject);
-    
-    // 프로젝트 제목 변경 이벤트 리스너
-    document.getElementById('project-title').addEventListener('change', updateProjectTitle);
-    
-    // 터미널 지우기 버튼 이벤트 리스너
-    document.getElementById('clear-terminal-btn').addEventListener('click', clearTerminal);
 }
 
 // 코드 실행 함수
