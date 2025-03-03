@@ -65,9 +65,9 @@ function initTerminal() {
         cursorVisible: false,
         cursorInterval: null,
         
-        // 줄 출력 메서드
+        // 줄 출력 메서드 (디버그 로그 제거)
         writeln: function(text) {
-            console.log('Terminal output:', text);
+            // console.log 호출 제거 - 무한 재귀 방지
             const terminalElement = document.getElementById('terminal');
             if (terminalElement) {
                 const line = document.createElement('div');
@@ -93,7 +93,7 @@ function initTerminal() {
         
         // 터미널 열기
         open: function(element) {
-            console.log('Opening virtual terminal in element:', element);
+            // 디버그 로그 제거
             // 가상 터미널 기본 스타일 적용
             if (element) {
                 element.style.backgroundColor = '#1e1e1e';
@@ -272,12 +272,11 @@ function initTerminal() {
     try {
         // Terminal 객체가 존재하는지 확인
         if (typeof window !== 'undefined' && window.Terminal) {
-            console.log('실제 터미널 사용 시도 (window.Terminal)');
             // 실제 Terminal 객체도 사용 가능하다면 추가 기능 구현
             // (실제 구현에서는 xterm.js와 통합)
         }
     } catch (error) {
-        console.error('터미널 초기화 오류:', error);
+        // 터미널 초기화 오류 조용히 처리
     }
     
     // 터미널 열기
@@ -787,7 +786,46 @@ function initPlayground() {
                     },
                     {
                         kind: 'block',
+                        type: 'logic_negate'
+                    },
+                    {
+                        kind: 'block',
                         type: 'logic_boolean'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'logic_null'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'logic_ternary'
+                    }
+                ]
+            },
+            {
+                kind: 'category',
+                name: '반복',
+                colour: '#5CA65C',
+                contents: [
+                    {
+                        kind: 'block',
+                        type: 'controls_repeat_ext'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'controls_whileUntil'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'controls_for'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'controls_forEach'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'controls_flow_statements'
                     }
                 ]
             },
@@ -806,7 +844,39 @@ function initPlayground() {
                     },
                     {
                         kind: 'block',
+                        type: 'math_single'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_trig'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_constant'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_number_property'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_round'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_modulo'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_constrain'
+                    },
+                    {
+                        kind: 'block',
                         type: 'math_random_int'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_random_float'
                     }
                 ]
             },
@@ -821,11 +891,43 @@ function initPlayground() {
                     },
                     {
                         kind: 'block',
-                        type: 'text_print'
+                        type: 'text_join'
                     },
                     {
                         kind: 'block',
-                        type: 'text_join'
+                        type: 'text_append'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_length'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_isEmpty'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_indexOf'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_charAt'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_getSubstring'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_changeCase'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_trim'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'text_print'
                     }
                 ]
             },
@@ -890,6 +992,11 @@ function initPlayground() {
         
         // 브라우저 alert/prompt/confirm 오버라이드
         overrideBrowserDialogs();
+        
+        // 커스텀 블록 등록 함수 호출
+        if (typeof registerTerminalBlocks === 'function') {
+            registerTerminalBlocks();
+        }
         
     } catch (error) {
         console.error('플레이그라운드 초기화 오류:', error);
@@ -1001,13 +1108,24 @@ async function runCode() {
         
         // 코드 실행 준비 (터미널 출력용 함수 오버라이드)
         const originalConsoleLog = console.log;
+        
+        // 재귀 방지를 위한 플래그
+        let inConsoleOverride = false;
+        
         console.log = function() {
+            // 재귀 호출 방지
+            if (inConsoleOverride) return;
+            
+            inConsoleOverride = true;
             const args = Array.from(arguments);
+            
             if (terminal && terminal.writeln) {
                 terminal.writeln(args.join(' '));
             } else {
                 originalConsoleLog.apply(console, args);
             }
+            
+            inConsoleOverride = false;
         };
         
         // 안전한 코드 실행을 위한 래퍼 함수
@@ -1029,7 +1147,7 @@ async function runCode() {
             if (terminal && terminal.writeln) {
                 terminal.writeln(`\n오류 발생: ${error.message}`);
             } else {
-                console.error('코드 실행 오류:', error);
+                originalConsoleLog('코드 실행 오류:', error);
             }
         } finally {
             // console.log 복원
