@@ -5,18 +5,12 @@ function overrideBrowserDialogs() {
     const originalPrompt = window.prompt;
     const originalConfirm = window.confirm;
     
-    // alert 오버라이드
+    // alert 오버라이드 - 입력 받지 않고 메시지만 표시
     window.alert = function(message) {
         if (terminal && terminal.writeln) {
             terminal.writeln('\n[알림] ' + message);
-            terminal.writeln('----- 계속하려면 Enter 키를 누르세요 -----');
-            
-            return new Promise((resolve) => {
-                createTerminalInput(function() {
-                    resolve();
-                    terminal.writeln('');
-                });
-            });
+            // 입력 없이 바로 진행
+            return Promise.resolve();
         } else {
             return originalAlert(message);
         }
@@ -24,7 +18,7 @@ function overrideBrowserDialogs() {
     
     // prompt 오버라이드
     window.prompt = function(message, defaultValue = '') {
-        if (terminal && terminal.writeln) {
+        if (terminal && terminal.writeln && terminal.readInput) {
             return terminalPrompt(message, defaultValue);
         } else {
             return originalPrompt(message, defaultValue);
@@ -33,7 +27,7 @@ function overrideBrowserDialogs() {
     
     // confirm 오버라이드
     window.confirm = function(message) {
-        if (terminal && terminal.writeln) {
+        if (terminal && terminal.writeln && terminal.readInput) {
             return terminalConfirm(message);
         } else {
             return originalConfirm(message);
@@ -41,81 +35,37 @@ function overrideBrowserDialogs() {
     };
     
     // 터미널에서 prompt 대화상자 구현
-    function terminalPrompt(message, defaultValue) {
-        return new Promise((resolve) => {
-            terminal.writeln('\n[입력] ' + message);
-            terminal.writeln(`(기본값: ${defaultValue || '없음'})`);
-            
-            createTerminalInput(function(value) {
-                const result = value || defaultValue;
-                terminal.writeln(`입력값: ${result}`);
-                resolve(result);
-            });
-        });
+    async function terminalPrompt(message, defaultValue) {
+        terminal.writeln('\n[입력] ' + message);
+        if (defaultValue) {
+            terminal.writeln(`(기본값: ${defaultValue})`);
+        }
+        
+        const value = await terminal.readInput();
+        return value || defaultValue;
     }
     
     // 터미널에서 confirm 대화상자 구현
-    function terminalConfirm(message) {
-        return new Promise((resolve) => {
-            terminal.writeln('\n[확인] ' + message);
-            terminal.writeln('(Y/N 또는 예/아니오로 답변하세요)');
-            
-            createTerminalInput(function(value) {
-                const lowerValue = value.toLowerCase();
-                const isConfirmed = lowerValue === 'y' || lowerValue === 'yes' || lowerValue === '예';
-                terminal.writeln(`응답: ${isConfirmed ? '예' : '아니오'}`);
-                resolve(isConfirmed);
-            });
-        });
-    }
-    
-    // 터미널 입력창 생성 함수
-    function createTerminalInput(callback) {
-        const terminalElement = document.getElementById('terminal');
-        if (!terminalElement) {
-            callback('');
-            return;
-        }
+    async function terminalConfirm(message) {
+        terminal.writeln('\n[확인] ' + message);
+        terminal.writeln('(Y/N 또는 예/아니오로 답변하세요)');
         
-        // 입력 컨테이너 생성
-        const inputContainer = document.createElement('div');
-        inputContainer.className = 'terminal-input-container';
-        
-        // 프롬프트 표시
-        const prompt = document.createElement('span');
-        prompt.className = 'terminal-prompt';
-        prompt.textContent = '>';
-        inputContainer.appendChild(prompt);
-        
-        // 입력 필드
-        const input = document.createElement('input');
-        input.className = 'terminal-input';
-        input.type = 'text';
-        inputContainer.appendChild(input);
-        
-        // 터미널에 추가
-        terminalElement.appendChild(inputContainer);
-        
-        // 포커스
-        input.focus();
-        
-        // 이벤트 리스너
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const value = input.value;
-                
-                // 입력 컨테이너 제거
-                inputContainer.remove();
-                
-                // 콜백 실행
-                callback(value);
-            }
-        });
+        const value = await terminal.readInput();
+        const lowerValue = value.toLowerCase();
+        return lowerValue === 'y' || lowerValue === 'yes' || lowerValue === '예';
     }
 }// 터미널 초기화 함수 (별도로 분리하여 initPlayground에서 호출)
 function initTerminal() {
     // 먼저 가상 터미널 객체 생성 (항상 기본 제공)
     terminal = {
+        // 현재 입력 관련 상태
+        inputMode: false,
+        inputBuffer: '',
+        inputCallback: null,
+        cursorVisible: false,
+        cursorInterval: null,
+        
+        // 줄 출력 메서드
         writeln: function(text) {
             console.log('Terminal output:', text);
             const terminalElement = document.getElementById('terminal');
@@ -124,16 +74,24 @@ function initTerminal() {
                 line.textContent = text;
                 line.style.color = 'white';
                 line.style.fontFamily = 'monospace';
-                line.style.padding = '2px 10px';
+                line.style.padding = '2px 0';
                 terminalElement.appendChild(line);
+                
+                // 스크롤을 항상 맨 아래로
+                terminalElement.scrollTop = terminalElement.scrollHeight;
             }
         },
+        
+        // 터미널 지우기
         clear: function() {
             const terminalElement = document.getElementById('terminal');
             if (terminalElement) {
                 terminalElement.innerHTML = '';
             }
+            this.stopInputMode();
         },
+        
+        // 터미널 열기
         open: function(element) {
             console.log('Opening virtual terminal in element:', element);
             // 가상 터미널 기본 스타일 적용
@@ -144,7 +102,170 @@ function initTerminal() {
                 element.style.fontFamily = 'monospace';
                 element.style.height = '100%';
                 element.style.overflowY = 'auto';
+                
+                // 터미널에 직접 키보드 이벤트 추가
+                element.tabIndex = 0; // 포커스 받을 수 있도록
+                element.addEventListener('keydown', this.handleKeyDown.bind(this));
+                element.addEventListener('focus', () => {
+                    if (this.inputMode) {
+                        this.startCursorBlink();
+                    }
+                });
+                element.addEventListener('blur', () => {
+                    this.stopCursorBlink();
+                });
             }
+        },
+        
+        // 사용자 입력 처리 시작
+        startInputMode: function(callback) {
+            this.inputMode = true;
+            this.inputBuffer = '';
+            this.inputCallback = callback;
+            
+            // 입력 라인 생성
+            const terminalElement = document.getElementById('terminal');
+            if (terminalElement) {
+                this.inputLine = document.createElement('div');
+                this.inputLine.className = 'terminal-input-line';
+                this.inputLine.style.color = 'white';
+                this.inputLine.style.fontFamily = 'monospace';
+                this.inputLine.style.padding = '2px 0';
+                this.inputPrefix = document.createElement('span');
+                this.inputPrefix.textContent = '> ';
+                this.inputPrefix.style.color = '#339af0';
+                
+                this.inputText = document.createElement('span');
+                this.inputText.textContent = '';
+                
+                this.cursor = document.createElement('span');
+                this.cursor.className = 'terminal-cursor';
+                this.cursor.innerHTML = '&nbsp;';
+                this.cursor.style.backgroundColor = 'white';
+                this.cursor.style.color = 'black';
+                
+                this.inputLine.appendChild(this.inputPrefix);
+                this.inputLine.appendChild(this.inputText);
+                this.inputLine.appendChild(this.cursor);
+                
+                terminalElement.appendChild(this.inputLine);
+                terminalElement.scrollTop = terminalElement.scrollHeight;
+                
+                // 포커스 설정 및 커서 깜박임 시작
+                terminalElement.focus();
+                this.startCursorBlink();
+            }
+        },
+        
+        // 입력 처리 중지
+        stopInputMode: function() {
+            this.inputMode = false;
+            this.stopCursorBlink();
+            
+            if (this.inputLine) {
+                // 입력줄을 일반 텍스트로 변환
+                const terminalElement = document.getElementById('terminal');
+                const finalText = this.inputLine.textContent;
+                this.inputLine = null;
+                this.inputPrefix = null;
+                this.inputText = null;
+                this.cursor = null;
+            }
+            
+            this.inputCallback = null;
+            this.inputBuffer = '';
+        },
+        
+        // 키보드 입력 처리
+        handleKeyDown: function(e) {
+            if (!this.inputMode) return;
+            
+            // Enter 키 처리
+            if (e.key === 'Enter') {
+                const result = this.inputBuffer;
+                
+                // 입력 모드 중지 및 콜백 실행
+                this.stopInputMode();
+                
+                // 줄바꿈을 위한 빈 줄 추가
+                this.writeln('');
+                
+                if (this.inputCallback) {
+                    this.inputCallback(result);
+                }
+                
+                e.preventDefault();
+                return;
+            }
+            
+            // 백스페이스 처리
+            if (e.key === 'Backspace') {
+                if (this.inputBuffer.length > 0) {
+                    this.inputBuffer = this.inputBuffer.substring(0, this.inputBuffer.length - 1);
+                    this.updateInputDisplay();
+                }
+                e.preventDefault();
+                return;
+            }
+            
+            // 일반 문자 입력 처리
+            if (e.key.length === 1) {
+                this.inputBuffer += e.key;
+                this.updateInputDisplay();
+                e.preventDefault();
+            }
+        },
+        
+        // 입력 표시 업데이트
+        updateInputDisplay: function() {
+            if (this.inputText) {
+                this.inputText.textContent = this.inputBuffer;
+            }
+        },
+        
+        // 커서 깜박임 시작
+        startCursorBlink: function() {
+            this.cursorVisible = true;
+            if (this.cursor) {
+                this.cursor.style.visibility = 'visible';
+            }
+            
+            // 기존 인터벌 제거
+            this.stopCursorBlink();
+            
+            // 새 인터벌 설정
+            this.cursorInterval = setInterval(() => {
+                if (!this.cursor) return;
+                
+                this.cursorVisible = !this.cursorVisible;
+                this.cursor.style.visibility = this.cursorVisible ? 'visible' : 'hidden';
+            }, 500);
+        },
+        
+        // 커서 깜박임 중지
+        stopCursorBlink: function() {
+            if (this.cursorInterval) {
+                clearInterval(this.cursorInterval);
+                this.cursorInterval = null;
+            }
+            
+            if (this.cursor) {
+                this.cursor.style.visibility = 'visible';
+                this.cursorVisible = true;
+            }
+        },
+        
+        // 사용자 입력 받기
+        readInput: function(promptText = '') {
+            return new Promise((resolve) => {
+                if (promptText) {
+                    this.writeln(promptText);
+                }
+                
+                this.startInputMode((value) => {
+                    resolve(value);
+                });
+            });
         }
     };
     
@@ -152,48 +273,11 @@ function initTerminal() {
         // Terminal 객체가 존재하는지 확인
         if (typeof window !== 'undefined' && window.Terminal) {
             console.log('실제 터미널 사용 시도 (window.Terminal)');
-            // 실제 Terminal 객체 사용
-            const realTerminal = new window.Terminal({
-                cursorBlink: true,
-                fontFamily: 'monospace',
-                fontSize: 14,
-                theme: {
-                    background: '#1e1e1e',
-                    foreground: '#f8f8f8',
-                    cursor: '#f8f8f8'
-                }
-            });
-            
-            // 기본 메서드 백업
-            const virtualWriteln = terminal.writeln;
-            const virtualClear = terminal.clear;
-            
-            // 실제 Terminal 객체로 메서드 교체
-            terminal.open = function(element) {
-                realTerminal.open(element);
-            };
-            
-            terminal.writeln = function(text) {
-                try {
-                    realTerminal.writeln(text);
-                } catch (e) {
-                    console.error('실제 터미널 writeln 오류:', e);
-                    virtualWriteln(text);
-                }
-            };
-            
-            terminal.clear = function() {
-                try {
-                    realTerminal.clear();
-                } catch (e) {
-                    console.error('실제 터미널 clear 오류:', e);
-                    virtualClear();
-                }
-            };
+            // 실제 Terminal 객체도 사용 가능하다면 추가 기능 구현
+            // (실제 구현에서는 xterm.js와 통합)
         }
     } catch (error) {
         console.error('터미널 초기화 오류:', error);
-        // 이미 가상 터미널을 생성했으므로 아무것도 하지 않음
     }
     
     // 터미널 열기
