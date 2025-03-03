@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>C-Terminal | 터미널 기반 블록 코딩 교육 플랫폼</title>
-    <link rel="stylesheet" href="/styles.css" type="text/css">
+    <link rel="stylesheet" href="/styles.css" type="text/css" />
     <!-- Blockly 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/blockly.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/blocks.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/msg/ko.min.js"></script>
     <!-- xterm.js 터미널 라이브러리 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.1.0/css/xterm.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.1.0/css/xterm.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.1.0/xterm.min.js"></script>
     <!-- Marked 마크다운 파서 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <!-- Font Awesome 아이콘 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <!-- 커스텀 블록 정의 -->
     <script src="custom_blocks.js"></script>
-</head>
 </head>
 <body>
     <header>
         <nav class="navbar">
             <div class="logo">
-                <a href="#"><img src="img/logo.svg" alt="C-Terminal 로고"> C-Terminal</a>
+                <a href="#"><img src="img/logo.svg" alt="C-Terminal 로고" /> C-Terminal</a>
             </div>
             <div class="nav-links">
                 <a href="#" class="active" id="nav-home">홈</a>
@@ -38,12 +37,12 @@
                 <button id="signup-btn" class="btn btn-primary">회원가입</button>
             </div>
             <div class="user-menu hidden">
-                <img src="img/default-avatar.svg" alt="사용자 아바타" id="user-avatar">
+                <img src="img/default-avatar.svg" alt="사용자 아바타" id="user-avatar" />
                 <div class="user-dropdown hidden">
                     <a href="#" id="nav-profile">내 프로필</a>
                     <a href="#" id="nav-projects">내 프로젝트</a>
                     <a href="#" id="nav-settings">설정</a>
-                    <hr>
+                    <hr />
                     <a href="#" id="logout-btn">로그아웃</a>
                 </div>
             </div>
@@ -55,7 +54,7 @@
         <section id="home-section" class="section">
             <div class="hero">
                 <div class="hero-content">
-                    <h1>코딩을 터미널처럼,<br>생각을 코드로</h1>
+                    <h1>코딩을 터미널처럼,<br />생각을 코드로</h1>
                     <p>C-Terminal은 블록 코딩과 터미널 기반 출력을 결합한 새로운 코딩 교육 플랫폼입니다.</p>
                     <div class="hero-buttons">
                         <button id="get-started-btn" class="btn btn-primary btn-large">시작하기</button>
@@ -63,7 +62,7 @@
                     </div>
                 </div>
                 <div class="hero-image">
-                    <img src="img/hero-image.svg" alt="C-Terminal 코딩 화면">
+                    <img src="img/hero-image.svg" alt="C-Terminal 코딩 화면" />
                 </div>
             </div>
 
@@ -120,7 +119,7 @@
             <div class="playground-container">
                 <div class="playground-header">
                     <div class="project-info">
-                        <input type="text" id="project-title" placeholder="제목 없는 프로젝트" value="제목 없는 프로젝트">
+                        <input type="text" id="project-title" placeholder="제목 없는 프로젝트" value="제목 없는 프로젝트" />
                         <span class="project-status" id="project-status">저장됨</span>
                     </div>
                     <div class="playground-actions">
@@ -157,7 +156,7 @@
                     <h2>커뮤니티</h2>
                     <div class="community-actions">
                         <div class="search-container">
-                            <input type="text" id="community-search" placeholder="게시물 검색...">
+                            <input type="text" id="community-search" placeholder="게시물 검색..." />
                             <button id="search-btn" class="btn btn-outline">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -185,11 +184,11 @@
                         <button class="close-modal-btn">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <input type="text" id="post-title" placeholder="제목" class="full-width">
+                        <input type="text" id="post-title" placeholder="제목" class="full-width" />
                         <textarea id="post-content" placeholder="내용을 작성하세요..." class="full-width"></textarea>
                         <div class="post-options">
                             <label>
-                                <input type="checkbox" id="attach-project">
+                                <input type="checkbox" id="attach-project" />
                                 현재 프로젝트 첨부
                             </label>
                         </div>
@@ -207,7 +206,7 @@
             <div class="profile-container">
                 <div class="profile-header">
                     <div class="profile-avatar">
-                        <img src="img/default-avatar.svg" alt="사용자 아바타" id="profile-avatar-img">
+                        <img src="img/default-avatar.svg" alt="사용자 아바타" id="profile-avatar-img" />
                     </div>
                     <div class="profile-info">
                         <h2 id="profile-username">사용자 이름</h2>
@@ -256,11 +255,11 @@
                     </div>
                     <div class="modal-body">
                         <div class="avatar-upload">
-                            <img src="img/default-avatar.svg" alt="프로필 이미지" id="avatar-preview">
+                            <img src="img/default-avatar.svg" alt="프로필 이미지" id="avatar-preview" />
                             <button id="upload-avatar-btn" class="btn btn-outline">이미지 업로드</button>
-                            <input type="file" id="avatar-upload" accept="image/*" hidden>
+                            <input type="file" id="avatar-upload" accept="image/*" hidden />
                         </div>
-                        <input type="text" id="edit-username" placeholder="사용자 이름" class="full-width">
+                        <input type="text" id="edit-username" placeholder="사용자 이름" class="full-width" />
                         <textarea id="edit-bio" placeholder="자기소개" class="full-width"></textarea>
                     </div>
                     <div class="modal-footer">
@@ -278,7 +277,7 @@
                     <h2>프로젝트 탐색</h2>
                     <div class="explore-filters">
                         <div class="search-container">
-                            <input type="text" id="explore-search" placeholder="프로젝트 검색...">
+                            <input type="text" id="explore-search" placeholder="프로젝트 검색..." />
                             <button id="explore-search-btn" class="btn btn-outline">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -312,7 +311,7 @@
     <footer>
         <div class="footer-content">
             <div class="footer-logo">
-                <img src="img/logo.svg" alt="C-Terminal 로고">
+                <img src="img/logo.svg" alt="C-Terminal 로고" />
                 <span>C-Terminal</span>
             </div>
             <div class="footer-links">
@@ -355,15 +354,15 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="login-email">이메일</label>
-                    <input type="email" id="login-email" placeholder="이메일 주소">
+                    <input type="email" id="login-email" placeholder="이메일 주소" />
                 </div>
                 <div class="form-group">
                     <label for="login-password">비밀번호</label>
-                    <input type="password" id="login-password" placeholder="비밀번호">
+                    <input type="password" id="login-password" placeholder="비밀번호" />
                 </div>
                 <div class="form-options">
                     <label>
-                        <input type="checkbox" id="remember-me">
+                        <input type="checkbox" id="remember-me" />
                         로그인 상태 유지
                     </label>
                     <a href="#" id="forgot-password">비밀번호 찾기</a>
@@ -389,23 +388,23 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="signup-username">사용자 이름</label>
-                    <input type="text" id="signup-username" placeholder="사용자 이름">
+                    <input type="text" id="signup-username" placeholder="사용자 이름" />
                 </div>
                 <div class="form-group">
                     <label for="signup-email">이메일</label>
-                    <input type="email" id="signup-email" placeholder="이메일 주소">
+                    <input type="email" id="signup-email" placeholder="이메일 주소" />
                 </div>
                 <div class="form-group">
                     <label for="signup-password">비밀번호</label>
-                    <input type="password" id="signup-password" placeholder="비밀번호">
+                    <input type="password" id="signup-password" placeholder="비밀번호" />
                 </div>
                 <div class="form-group">
                     <label for="signup-confirm-password">비밀번호 확인</label>
-                    <input type="password" id="signup-confirm-password" placeholder="비밀번호 확인">
+                    <input type="password" id="signup-confirm-password" placeholder="비밀번호 확인" />
                 </div>
                 <div class="form-agreement">
                     <label>
-                        <input type="checkbox" id="terms-agree">
+                        <input type="checkbox" id="terms-agree" />
                         <a href="#">이용약관</a>과 <a href="#">개인정보처리방침</a>에 동의합니다.
                     </label>
                 </div>
@@ -430,14 +429,14 @@
             <div class="modal-body">
                 <p>아래 링크를 통해 프로젝트를 공유할 수 있습니다:</p>
                 <div class="share-link-container">
-                    <input type="text" id="share-link" readonly>
+                    <input type="text" id="share-link" readonly />
                     <button id="copy-link-btn" class="btn btn-outline">
                         <i class="fas fa-copy"></i> 복사
                     </button>
                 </div>
                 <div class="share-options">
                     <label>
-                        <input type="checkbox" id="public-project" checked>
+                        <input type="checkbox" id="public-project" checked />
                         공개 프로젝트로 설정
                     </label>
                     <p class="share-note">비공개 프로젝트는 링크가 있는 사용자만 접근할 수 있습니다.</p>
