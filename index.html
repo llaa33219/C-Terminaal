@@ -36,9 +36,9 @@
                 <button id="login-btn" class="btn btn-outline">로그인</button>
                 <button id="signup-btn" class="btn btn-primary">회원가입</button>
             </div>
-            <div class="user-menu hidden">
+            <div class="user-menu" style="display:none;">
                 <img src="img/default-avatar.svg" alt="사용자 아바타" id="user-avatar" />
-                <div class="user-dropdown hidden">
+                <div class="user-dropdown" style="display:none;">
                     <a href="#" id="nav-profile">내 프로필</a>
                     <a href="#" id="nav-projects">내 프로젝트</a>
                     <a href="#" id="nav-settings">설정</a>
@@ -115,7 +115,7 @@
         </section>
 
         <!-- 플레이그라운드 섹션 -->
-        <section id="playground-section" class="section hidden">
+        <section id="playground-section" class="section" style="display:none;">
             <div class="playground-container">
                 <div class="playground-header">
                     <div class="project-info">
@@ -150,7 +150,7 @@
         </section>
 
         <!-- 커뮤니티 섹션 -->
-        <section id="community-section" class="section hidden">
+        <section id="community-section" class="section" style="display:none;">
             <div class="community-container">
                 <div class="community-header">
                     <h2>커뮤니티</h2>
@@ -177,7 +177,7 @@
             </div>
 
             <!-- 새 게시물 모달 -->
-            <div id="new-post-modal" class="modal hidden">
+            <div id="new-post-modal" class="modal" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>새 게시물 작성</h3>
@@ -202,7 +202,7 @@
         </section>
 
         <!-- 프로필 섹션 -->
-        <section id="profile-section" class="section hidden">
+        <section id="profile-section" class="section" style="display:none;">
             <div class="profile-container">
                 <div class="profile-header">
                     <div class="profile-avatar">
@@ -238,7 +238,7 @@
                             <!-- 프로젝트들이 여기에 동적으로 로드됩니다 -->
                         </div>
                     </div>
-                    <div id="activity-tab" class="tab-content hidden">
+                    <div id="activity-tab" class="tab-content" style="display:none;">
                         <div class="activity-feed" id="user-activity">
                             <!-- 활동들이 여기에 동적으로 로드됩니다 -->
                         </div>
@@ -247,7 +247,7 @@
             </div>
 
             <!-- 프로필 편집 모달 -->
-            <div id="edit-profile-modal" class="modal hidden">
+            <div id="edit-profile-modal" class="modal" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>프로필 편집</h3>
@@ -257,7 +257,7 @@
                         <div class="avatar-upload">
                             <img src="img/default-avatar.svg" alt="프로필 이미지" id="avatar-preview" />
                             <button id="upload-avatar-btn" class="btn btn-outline">이미지 업로드</button>
-                            <input type="file" id="avatar-upload" accept="image/*" hidden />
+                            <input type="file" id="avatar-upload" accept="image/*" style="display:none;" />
                         </div>
                         <input type="text" id="edit-username" placeholder="사용자 이름" class="full-width" />
                         <textarea id="edit-bio" placeholder="자기소개" class="full-width"></textarea>
@@ -271,7 +271,7 @@
         </section>
 
         <!-- 탐색 섹션 -->
-        <section id="explore-section" class="section hidden">
+        <section id="explore-section" class="section" style="display:none;">
             <div class="explore-container">
                 <div class="explore-header">
                     <h2>프로젝트 탐색</h2>
@@ -345,7 +345,7 @@
     </footer>
 
     <!-- 로그인 모달 -->
-    <div id="login-modal" class="modal hidden">
+    <div id="login-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>로그인</h3>
@@ -379,7 +379,7 @@
     </div>
 
     <!-- 회원가입 모달 -->
-    <div id="signup-modal" class="modal hidden">
+    <div id="signup-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>회원가입</h3>
@@ -420,7 +420,7 @@
     </div>
 
     <!-- 프로젝트 공유 모달 -->
-    <div id="share-modal" class="modal hidden">
+    <div id="share-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>프로젝트 공유</h3>
