@@ -20,7 +20,7 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     };
     
-    // OPTIONS 요청 처리 (CORS preflight)
+    // OPTIONS 요청 처리
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
@@ -34,9 +34,6 @@ export default {
       if (request.method !== "GET") {
         data = await request.json();
       }
-      
-      // 인증 확인 (실제로는 더 견고한 인증 필요)
-      const authHeader = request.headers.get('Authorization');
       
       // R2 버킷 인스턴스
       const bucket = env.R2_BUCKET;
