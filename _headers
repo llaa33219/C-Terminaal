@@ -1,21 +1,5 @@
-# Cloudflare Pages 헤더 설정
-
-# 모든 페이지에 대한 기본 헤더
+# 기본 보안 헤더
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Type: text/html; charset=UTF-8
-
-# CSS 파일에 대한 MIME 타입 명시
-*.css
-  Content-Type: text/css
-
-# JavaScript 파일에 대한 MIME 타입 명시
-*.js
-  Content-Type: application/javascript
-
-# SVG 파일에 대한 MIME 타입 명시
-*.svg
-  Content-Type: image/svg+xml

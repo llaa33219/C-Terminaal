@@ -12,8 +12,24 @@ export default {
         return await handleApiRequest(request, env);
       }
       
-      // 정적 자산 요청은 Pages 기본 처리로 전달
-      return env.ASSETS.fetch(request);
+      // 정적 자산 요청 처리 (HTML 문서의 Content-Type 설정 포함)
+      const response = await env.ASSETS.fetch(request);
+      
+      // HTML 문서인 경우 Content-Type 헤더 설정
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("text/html")) {
+        const newHeaders = new Headers(response.headers);
+        newHeaders.set("Content-Type", "text/html; charset=UTF-8");
+        
+        return new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: newHeaders
+        });
+      }
+      
+      // 다른 정적 자산은 그대로 반환
+      return response;
     }
   };
   
