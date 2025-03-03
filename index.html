@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-Terminal | 터미널 기반 블록 코딩 교육 플랫폼</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Blockly 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/blockly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/blocks.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/msg/ko.min.js"></script>
+    <!-- xterm.js 터미널 라이브러리 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.1.0/css/xterm.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.1.0/xterm.min.js"></script>
+    <!-- Marked 마크다운 파서 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <!-- Font Awesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 커스텀 블록 정의 -->
+    <script src="custom_blocks.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="#"><img src="img/logo.svg" alt="C-Terminal 로고"> C-Terminal</a>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active" id="nav-home">홈</a>
+                <a href="#" id="nav-playground">플레이그라운드</a>
+                <a href="#" id="nav-community">커뮤니티</a>
+                <a href="#" id="nav-explore">탐색</a>
+            </div>
+            <div class="nav-auth">
+                <button id="login-btn" class="btn btn-outline">로그인</button>
+                <button id="signup-btn" class="btn btn-primary">회원가입</button>
+            </div>
+            <div class="user-menu hidden">
+                <img src="img/default-avatar.svg" alt="사용자 아바타" id="user-avatar">
+                <div class="user-dropdown hidden">
+                    <a href="#" id="nav-profile">내 프로필</a>
+                    <a href="#" id="nav-projects">내 프로젝트</a>
+                    <a href="#" id="nav-settings">설정</a>
+                    <hr>
+                    <a href="#" id="logout-btn">로그아웃</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- 홈 섹션 -->
+        <section id="home-section" class="section">
+            <div class="hero">
+                <div class="hero-content">
+                    <h1>코딩을 터미널처럼,<br>생각을 코드로</h1>
+                    <p>C-Terminal은 블록 코딩과 터미널 기반 출력을 결합한 새로운 코딩 교육 플랫폼입니다.</p>
+                    <div class="hero-buttons">
+                        <button id="get-started-btn" class="btn btn-primary btn-large">시작하기</button>
+                        <button id="learn-more-btn" class="btn btn-outline btn-large">더 알아보기</button>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="img/hero-image.svg" alt="C-Terminal 코딩 화면">
+                </div>
+            </div>
+
+            <div class="features">
+                <h2>C-Terminal의 특별한 기능들</h2>
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-cube"></i></div>
+                        <h3>블록 코딩</h3>
+                        <p>직관적인 블록 인터페이스로 코딩의 기본 개념을 쉽게 배울 수 있습니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-terminal"></i></div>
+                        <h3>터미널 출력</h3>
+                        <p>실제 프로그래밍 환경과 유사한 터미널 출력으로 현실적인 코딩 경험을 제공합니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-users"></i></div>
+                        <h3>활발한 커뮤니티</h3>
+                        <p>다른 사용자들과 아이디어를 공유하고 함께 성장할 수 있는 커뮤니티 공간입니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-share-alt"></i></div>
+                        <h3>프로젝트 공유</h3>
+                        <p>자신의 프로젝트를 쉽게 공유하고 다른 사람의 작품에서 영감을 얻을 수 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="how-it-works">
+                <h2>어떻게 작동하나요?</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>블록으로 코드 작성</h3>
+                        <p>직관적인 블록을 드래그 앤 드롭하여 프로그램을 작성합니다.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>실행 버튼 클릭</h3>
+                        <p>코드를 실행하여 터미널에서 결과를 확인합니다.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>프로젝트 저장 및 공유</h3>
+                        <p>작업한 프로젝트를 저장하고 커뮤니티와 공유합니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 플레이그라운드 섹션 -->
+        <section id="playground-section" class="section hidden">
+            <div class="playground-container">
+                <div class="playground-header">
+                    <div class="project-info">
+                        <input type="text" id="project-title" placeholder="제목 없는 프로젝트" value="제목 없는 프로젝트">
+                        <span class="project-status" id="project-status">저장됨</span>
+                    </div>
+                    <div class="playground-actions">
+                        <button id="save-btn" class="btn btn-outline">
+                            <i class="fas fa-save"></i> 저장
+                        </button>
+                        <button id="share-btn" class="btn btn-outline">
+                            <i class="fas fa-share-alt"></i> 공유
+                        </button>
+                        <button id="run-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> 실행
+                        </button>
+                    </div>
+                </div>
+                <div class="playground-content">
+                    <div id="blockly-container"></div>
+                    <div class="terminal-container">
+                        <div class="terminal-header">
+                            <span>터미널</span>
+                            <button id="clear-terminal-btn" class="btn btn-small">
+                                <i class="fas fa-trash"></i> 지우기
+                            </button>
+                        </div>
+                        <div id="terminal"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 커뮤니티 섹션 -->
+        <section id="community-section" class="section hidden">
+            <div class="community-container">
+                <div class="community-header">
+                    <h2>커뮤니티</h2>
+                    <div class="community-actions">
+                        <div class="search-container">
+                            <input type="text" id="community-search" placeholder="게시물 검색...">
+                            <button id="search-btn" class="btn btn-outline">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <button id="new-post-btn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 새 게시물
+                        </button>
+                    </div>
+                </div>
+                <div class="community-tabs">
+                    <button class="tab-btn active" data-tab="hot">인기</button>
+                    <button class="tab-btn" data-tab="new">최신</button>
+                    <button class="tab-btn" data-tab="top">화제</button>
+                </div>
+                <div class="posts-container" id="posts-container">
+                    <!-- 포스트들이 여기에 동적으로 로드됩니다 -->
+                </div>
+            </div>
+
+            <!-- 새 게시물 모달 -->
+            <div id="new-post-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>새 게시물 작성</h3>
+                        <button class="close-modal-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="post-title" placeholder="제목" class="full-width">
+                        <textarea id="post-content" placeholder="내용을 작성하세요..." class="full-width"></textarea>
+                        <div class="post-options">
+                            <label>
+                                <input type="checkbox" id="attach-project">
+                                현재 프로젝트 첨부
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancel-post-btn" class="btn btn-outline">취소</button>
+                        <button id="submit-post-btn" class="btn btn-primary">게시</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 프로필 섹션 -->
+        <section id="profile-section" class="section hidden">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <img src="img/default-avatar.svg" alt="사용자 아바타" id="profile-avatar-img">
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profile-username">사용자 이름</h2>
+                        <p id="profile-bio">자기소개가 없습니다.</p>
+                        <div class="profile-stats">
+                            <div class="stat">
+                                <span class="stat-value" id="projects-count">0</span>
+                                <span class="stat-label">프로젝트</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="followers-count">0</span>
+                                <span class="stat-label">팔로워</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="following-count">0</span>
+                                <span class="stat-label">팔로잉</span>
+                            </div>
+                        </div>
+                        <button id="edit-profile-btn" class="btn btn-outline">프로필 편집</button>
+                    </div>
+                </div>
+                <div class="profile-tabs">
+                    <button class="tab-btn active" data-tab="projects">프로젝트</button>
+                    <button class="tab-btn" data-tab="activity">활동</button>
+                </div>
+                <div class="profile-content">
+                    <div id="projects-tab" class="tab-content">
+                        <div class="projects-grid" id="user-projects">
+                            <!-- 프로젝트들이 여기에 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+                    <div id="activity-tab" class="tab-content hidden">
+                        <div class="activity-feed" id="user-activity">
+                            <!-- 활동들이 여기에 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 프로필 편집 모달 -->
+            <div id="edit-profile-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>프로필 편집</h3>
+                        <button class="close-modal-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="avatar-upload">
+                            <img src="img/default-avatar.svg" alt="프로필 이미지" id="avatar-preview">
+                            <button id="upload-avatar-btn" class="btn btn-outline">이미지 업로드</button>
+                            <input type="file" id="avatar-upload" accept="image/*" hidden>
+                        </div>
+                        <input type="text" id="edit-username" placeholder="사용자 이름" class="full-width">
+                        <textarea id="edit-bio" placeholder="자기소개" class="full-width"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancel-edit-btn" class="btn btn-outline">취소</button>
+                        <button id="save-profile-btn" class="btn btn-primary">저장</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 탐색 섹션 -->
+        <section id="explore-section" class="section hidden">
+            <div class="explore-container">
+                <div class="explore-header">
+                    <h2>프로젝트 탐색</h2>
+                    <div class="explore-filters">
+                        <div class="search-container">
+                            <input type="text" id="explore-search" placeholder="프로젝트 검색...">
+                            <button id="explore-search-btn" class="btn btn-outline">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <select id="category-filter" class="select-filter">
+                            <option value="all">모든 카테고리</option>
+                            <option value="games">게임</option>
+                            <option value="art">아트</option>
+                            <option value="tools">도구</option>
+                            <option value="education">교육</option>
+                        </select>
+                        <select id="sort-filter" class="select-filter">
+                            <option value="popular">인기순</option>
+                            <option value="newest">최신순</option>
+                            <option value="trending">트렌딩</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="explore-grid" id="explore-projects">
+                    <!-- 프로젝트들이 여기에 동적으로 로드됩니다 -->
+                </div>
+                <div class="pagination">
+                    <button id="prev-page" class="btn btn-outline btn-small" disabled>이전</button>
+                    <span id="page-info">1 / 1</span>
+                    <button id="next-page" class="btn btn-outline btn-small" disabled>다음</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="img/logo.svg" alt="C-Terminal 로고">
+                <span>C-Terminal</span>
+            </div>
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>서비스</h4>
+                    <a href="#">소개</a>
+                    <a href="#">사용 방법</a>
+                    <a href="#">튜토리얼</a>
+                </div>
+                <div class="footer-column">
+                    <h4>커뮤니티</h4>
+                    <a href="#">포럼</a>
+                    <a href="#">이벤트</a>
+                    <a href="#">기여하기</a>
+                </div>
+                <div class="footer-column">
+                    <h4>회사</h4>
+                    <a href="#">소개</a>
+                    <a href="#">블로그</a>
+                    <a href="#">연락처</a>
+                </div>
+            </div>
+            <div class="footer-legal">
+                <p>&copy; 2025 C-Terminal. 모든 권리 보유.</p>
+                <div class="legal-links">
+                    <a href="#">이용약관</a>
+                    <a href="#">개인정보처리방침</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 로그인 모달 -->
+    <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>로그인</h3>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="login-email">이메일</label>
+                    <input type="email" id="login-email" placeholder="이메일 주소">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">비밀번호</label>
+                    <input type="password" id="login-password" placeholder="비밀번호">
+                </div>
+                <div class="form-options">
+                    <label>
+                        <input type="checkbox" id="remember-me">
+                        로그인 상태 유지
+                    </label>
+                    <a href="#" id="forgot-password">비밀번호 찾기</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="login-submit-btn" class="btn btn-primary full-width">로그인</button>
+                <div class="modal-alt-action">
+                    <span>계정이 없으신가요?</span>
+                    <a href="#" id="switch-to-signup">회원가입</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 모달 -->
+    <div id="signup-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>회원가입</h3>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="signup-username">사용자 이름</label>
+                    <input type="text" id="signup-username" placeholder="사용자 이름">
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">이메일</label>
+                    <input type="email" id="signup-email" placeholder="이메일 주소">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">비밀번호</label>
+                    <input type="password" id="signup-password" placeholder="비밀번호">
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">비밀번호 확인</label>
+                    <input type="password" id="signup-confirm-password" placeholder="비밀번호 확인">
+                </div>
+                <div class="form-agreement">
+                    <label>
+                        <input type="checkbox" id="terms-agree">
+                        <a href="#">이용약관</a>과 <a href="#">개인정보처리방침</a>에 동의합니다.
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="signup-submit-btn" class="btn btn-primary full-width">회원가입</button>
+                <div class="modal-alt-action">
+                    <span>이미 계정이 있으신가요?</span>
+                    <a href="#" id="switch-to-login">로그인</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 프로젝트 공유 모달 -->
+    <div id="share-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>프로젝트 공유</h3>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>아래 링크를 통해 프로젝트를 공유할 수 있습니다:</p>
+                <div class="share-link-container">
+                    <input type="text" id="share-link" readonly>
+                    <button id="copy-link-btn" class="btn btn-outline">
+                        <i class="fas fa-copy"></i> 복사
+                    </button>
+                </div>
+                <div class="share-options">
+                    <label>
+                        <input type="checkbox" id="public-project" checked>
+                        공개 프로젝트로 설정
+                    </label>
+                    <p class="share-note">비공개 프로젝트는 링크가 있는 사용자만 접근할 수 있습니다.</p>
+                </div>
+                <div class="social-share">
+                    <button class="social-btn" data-platform="twitter">
+                        <i class="fab fa-twitter"></i> 트위터
+                    </button>
+                    <button class="social-btn" data-platform="facebook">
+                        <i class="fab fa-facebook"></i> 페이스북
+                    </button>
+                    <button class="social-btn" data-platform="reddit">
+                        <i class="fab fa-reddit"></i> 레딧
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
