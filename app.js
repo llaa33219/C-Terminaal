@@ -513,22 +513,73 @@ function initPlayground() {
     // 저장된 프로젝트 불러오기
     loadCurrentProject();
     
-    // 터미널 초기화
-    terminal = new Terminal({
-        cursorBlink: true,
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: 14,
-        theme: {
-            background: '#1e1e1e',
-            foreground: '#f8f8f8',
-            cursor: '#f8f8f8'
+    // 터미널 초기화 (XTerm 객체가 존재하는지 확인)
+    if (typeof window.Terminal !== 'undefined') {
+        // window.Terminal 사용
+        terminal = new window.Terminal({
+            cursorBlink: true,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 14,
+            theme: {
+                background: '#1e1e1e',
+                foreground: '#f8f8f8',
+                cursor: '#f8f8f8'
+            }
+        });
+    } else if (typeof Terminal !== 'undefined') {
+        // 전역 Terminal 사용
+        terminal = new Terminal({
+            cursorBlink: true,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 14,
+            theme: {
+                background: '#1e1e1e',
+                foreground: '#f8f8f8',
+                cursor: '#f8f8f8'
+            }
+        });
+    } else {
+        // XTerm 라이브러리가 로드되지 않은 경우 대체 UI 제공
+        console.error('XTerm 라이브러리를 찾을 수 없습니다.');
+        const terminalElement = document.getElementById('terminal');
+        if (terminalElement) {
+            terminalElement.innerHTML = '<div style="color: white; padding: 10px;">터미널을 초기화할 수 없습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
         }
-    });
-    terminal.open(document.getElementById('terminal'));
-    terminal.writeln('C-Terminal v1.0');
-    terminal.writeln('터미널이 준비되었습니다.');
-    terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
-    terminal.writeln('');
+        
+        // 가상 터미널 객체 제공 (오류 방지)
+        terminal = {
+            writeln: function(text) {
+                console.log('Terminal output:', text);
+                const terminalElement = document.getElementById('terminal');
+                if (terminalElement) {
+                    const line = document.createElement('div');
+                    line.textContent = text;
+                    terminalElement.appendChild(line);
+                }
+            },
+            clear: function() {
+                const terminalElement = document.getElementById('terminal');
+                if (terminalElement) {
+                    terminalElement.innerHTML = '';
+                }
+            },
+            open: function(element) {
+                console.log('Opening virtual terminal in element:', element);
+            }
+        };
+    }
+    
+    // 실제 터미널 객체가 있는 경우에만 열기
+    if (terminal.open && typeof terminal.open === 'function') {
+        const terminalElement = document.getElementById('terminal');
+        if (terminalElement) {
+            terminal.open(terminalElement);
+            terminal.writeln('C-Terminal v1.0');
+            terminal.writeln('터미널이 준비되었습니다.');
+            terminal.writeln('실행 버튼을 눌러 코드를 실행하세요.');
+            terminal.writeln('');
+        }
+    }
     
     // 실행 버튼 이벤트 리스너
     document.getElementById('run-btn').addEventListener('click', runCode);
@@ -1240,16 +1291,88 @@ function generateDemoProjects() {
 
 // 파일 업로드 함수 (Cloudflare R2 연동)
 async function uploadToR2(file, path) {
-    // 실제 구현에서는 Cloudflare R2 API를 사용하여 파일 업로드
-    // 이 함수는 데모 버전에서는 구현되지 않습니다.
-    console.log(`[Demo] Uploading to R2: ${path}`);
-    return `https://${R2_CONFIG.bucketName}.${R2_CONFIG.endpoint}/${path}`;
+    try {
+        // 파일 타입 확인
+        const contentType = file.type || 'application/octet-stream';
+        
+        // API 엔드포인트로 PUT 요청
+        const response = await fetch(`${R2_CONFIG.endpoint}/${path}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': contentType,
+                'Authorization': `Bearer ${R2_CONFIG.apiKey}`,
+                'X-Custom-Auth': R2_CONFIG.apiKey
+            },
+            body: file
+        });
+        
+        // 응답 확인
+        if (!response.ok) {
+            throw new Error(`업로드 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        console.log(`R2 업로드 성공: ${path}`);
+        // 파일 URL 반환
+        return `${R2_CONFIG.endpoint}/${path}`;
+    } catch (error) {
+        console.error('R2 업로드 오류:', error);
+        alert(`파일 업로드 중 오류가 발생했습니다: ${error.message}`);
+        return null;
+    }
 }
 
 // 파일 다운로드 함수 (Cloudflare R2 연동)
 async function downloadFromR2(path) {
-    // 실제 구현에서는 Cloudflare R2 API를 사용하여 파일 다운로드
-    // 이 함수는 데모 버전에서는 구현되지 않습니다.
-    console.log(`[Demo] Downloading from R2: ${path}`);
-    return null;
+    try {
+        // API 엔드포인트로 GET 요청
+        const response = await fetch(`${R2_CONFIG.endpoint}/${path}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${R2_CONFIG.apiKey}`,
+                'X-Custom-Auth': R2_CONFIG.apiKey
+            }
+        });
+        
+        // 응답 확인
+        if (!response.ok) {
+            throw new Error(`다운로드 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        console.log(`R2 다운로드 성공: ${path}`);
+        // 응답 데이터 반환
+        return await response.blob();
+    } catch (error) {
+        console.error('R2 다운로드 오류:', error);
+        alert(`파일 다운로드 중 오류가 발생했습니다: ${error.message}`);
+        return null;
+    }
+}
+
+// R2 파일 목록 조회 함수
+async function listFilesFromR2(prefix = '') {
+    try {
+        // API 엔드포인트로 POST 요청 (list 작업)
+        const response = await fetch(`${R2_CONFIG.endpoint}/list?prefix=${prefix}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${R2_CONFIG.apiKey}`,
+                'X-Custom-Auth': R2_CONFIG.apiKey
+            }
+        });
+        
+        // 응답 확인
+        if (!response.ok) {
+            throw new Error(`목록 조회 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        // 파일 목록 데이터 반환
+        const data = await response.json();
+        console.log(`R2 파일 목록 조회 성공: ${prefix}`, data);
+        return data;
+    } catch (error) {
+        console.error('R2 파일 목록 조회 오류:', error);
+        alert(`파일 목록 조회 중 오류가 발생했습니다: ${error.message}`);
+        return { objects: [], delimitedPrefixes: [] };
+    }
 }
