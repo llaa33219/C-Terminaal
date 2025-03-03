@@ -1,7 +1,6 @@
 // C-Terminaal 메인 앱 스크립트
 // 주요 앱 초기화 및 네비게이션, 인증 처리
 
-// 파이어베이스 구성 - 실제 사용 시 본인의 프로젝트 정보로 교체해야 함
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "c-terminaal.firebaseapp.com",
@@ -11,7 +10,6 @@ const firebaseConfig = {
     appId: "YOUR_APP_ID"
 };
 
-// Cloudflare R2 구성
 const r2Config = {
     accountId: "YOUR_CLOUDFLARE_ACCOUNT_ID",
     bucketName: "c-terminaal-storage",
@@ -19,7 +17,6 @@ const r2Config = {
     secretAccessKey: "YOUR_R2_SECRET_ACCESS_KEY"
 };
 
-// 전역 상태 관리
 const state = {
     currentUser: null,
     currentProject: null,
@@ -34,13 +31,10 @@ const state = {
     projects: []
 };
 
-// DOM 요소 캐싱
 const dom = {
-    // 네비게이션
     navLinks: document.querySelectorAll('nav a'),
     pages: document.querySelectorAll('.page'),
     
-    // 플레이그라운드
     blocklyDiv: document.getElementById('blockly-div'),
     terminalDiv: document.getElementById('terminal'),
     runButton: document.getElementById('run-code'),
@@ -51,13 +45,11 @@ const dom = {
     projectSelect: document.getElementById('project-select'),
     shareButton: document.getElementById('share-project'),
     
-    // 사용자 컨트롤
     loginButton: document.getElementById('login-button'),
     userProfile: document.getElementById('user-profile'),
     userAvatar: document.getElementById('user-avatar'),
     username: document.getElementById('username'),
     
-    // 모달
     loginModal: document.getElementById('login-modal'),
     registerModal: document.getElementById('register-modal'),
     shareModal: document.getElementById('share-modal'),
@@ -65,12 +57,10 @@ const dom = {
     allModals: document.querySelectorAll('.modal'),
     closeModalButtons: document.querySelectorAll('.close-modal'),
     
-    // 로그인 및 회원가입 폼
     loginForm: document.getElementById('login-form'),
     registerForm: document.getElementById('register-form'),
     registerLink: document.getElementById('register-link'),
     
-    // 공유 모달
     projectTitle: document.getElementById('project-title'),
     projectDescription: document.getElementById('project-description'),
     confirmShareButton: document.getElementById('confirm-share'),
@@ -78,7 +68,6 @@ const dom = {
     shareUrl: document.getElementById('share-url'),
     copyUrlButton: document.getElementById('copy-url'),
     
-    // 커뮤니티
     postsContainer: document.getElementById('posts-container'),
     newPostButton: document.getElementById('new-post'),
     postForm: document.getElementById('post-form'),
@@ -89,7 +78,6 @@ const dom = {
     nextPageButton: document.getElementById('next-page'),
     pageInfo: document.getElementById('page-info'),
     
-    // 탐색
     projectsGrid: document.getElementById('projects-grid'),
     projectSearch: document.getElementById('project-search'),
     projectSearchButton: document.getElementById('project-search-button'),
@@ -99,7 +87,6 @@ const dom = {
     nextProjectsPageButton: document.getElementById('next-projects-page'),
     projectsPageInfo: document.getElementById('projects-page-info'),
     
-    // 프로필
     profileUsername: document.getElementById('profile-username'),
     profileBio: document.getElementById('profile-bio'),
     profileAvatar: document.getElementById('profile-avatar'),
@@ -111,34 +98,23 @@ const dom = {
     tabContents: document.querySelectorAll('.tab-content')
 };
 
-// 앱 초기화
 function initApp() {
-    // Firebase 초기화
     firebase.initializeApp(firebaseConfig);
-    
-    // 인증 상태 변경 리스너
     firebase.auth().onAuthStateChanged(handleAuthStateChanged);
-    
-    // 이벤트 리스너 등록
     registerEventListeners();
     
-    // Blockly 초기화 (blockly-config.js에서 처리)
     if (typeof initBlockly === 'function') {
         initBlockly();
     }
     
-    // Terminal 초기화 (terminal.js에서 처리)
     if (typeof initTerminal === 'function') {
         initTerminal();
     }
     
-    // 기본 페이지 로드
     loadContent('playground');
 }
 
-// 이벤트 리스너 등록
 function registerEventListeners() {
-    // 네비게이션 이벤트
     dom.navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -150,29 +126,26 @@ function registerEventListeners() {
         });
     });
     
-    // 플레이그라운드 컨트롤 이벤트
     dom.runButton.addEventListener('click', runCode);
     dom.stopButton.addEventListener('click', stopExecution);
     dom.saveButton.addEventListener('click', saveProject);
-    dom.clearTerminalButton.addEventListener('click', clearTerminal);
+    // 수정: clearTerminal -> terminalClear (터미널.js에 정의되어 있음)
+    dom.clearTerminalButton.addEventListener('click', terminalClear);
     dom.newProjectButton.addEventListener('click', createNewProject);
     dom.projectSelect.addEventListener('change', loadSelectedProject);
     dom.shareButton.addEventListener('click', openShareModal);
     
-    // 사용자 인증 이벤트
     dom.loginButton.addEventListener('click', openLoginModal);
     dom.loginForm.addEventListener('submit', handleLogin);
     dom.registerForm.addEventListener('submit', handleRegister);
     dom.registerLink.addEventListener('click', showRegisterModal);
     
-    // 모달 닫기 이벤트
     dom.closeModalButtons.forEach(button => {
         button.addEventListener('click', () => {
             closeAllModals();
         });
     });
     
-    // 모달 외부 클릭 시 닫기
     window.addEventListener('click', (e) => {
         dom.allModals.forEach(modal => {
             if (e.target === modal) {
@@ -181,11 +154,9 @@ function registerEventListeners() {
         });
     });
     
-    // 공유 모달 이벤트
     dom.confirmShareButton.addEventListener('click', shareProject);
     dom.copyUrlButton.addEventListener('click', copyShareUrl);
     
-    // 커뮤니티 이벤트
     dom.newPostButton.addEventListener('click', openNewPostModal);
     dom.postForm.addEventListener('submit', submitPost);
     dom.postCategorySelect.addEventListener('change', filterPosts);
@@ -193,14 +164,12 @@ function registerEventListeners() {
     dom.prevPageButton.addEventListener('click', () => navigateCommunityPage(-1));
     dom.nextPageButton.addEventListener('click', () => navigateCommunityPage(1));
     
-    // 탐색 이벤트
     dom.projectSearchButton.addEventListener('click', searchProjects);
     dom.sortBy.addEventListener('change', filterProjects);
     dom.difficulty.addEventListener('change', filterProjects);
     dom.prevProjectsPageButton.addEventListener('click', () => navigateExplorePage(-1));
     dom.nextProjectsPageButton.addEventListener('click', () => navigateExplorePage(1));
     
-    // 프로필 탭 이벤트
     dom.profileTabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
             const tabName = e.target.dataset.tab;
@@ -210,17 +179,12 @@ function registerEventListeners() {
         });
     });
     
-    // 프로필 수정 이벤트
     dom.editProfileButton.addEventListener('click', openEditProfileModal);
 }
 
-// 인증 상태 변경 처리
 function handleAuthStateChanged(user) {
     if (user) {
-        // 사용자가 로그인한 경우
         state.currentUser = user;
-        
-        // UI 업데이트
         dom.loginButton.classList.add('hidden');
         dom.userProfile.classList.remove('hidden');
         dom.username.textContent = user.displayName || user.email;
@@ -229,49 +193,35 @@ function handleAuthStateChanged(user) {
             dom.userAvatar.src = user.photoURL;
         }
         
-        // 사용자 프로젝트 로드
         loadUserProjects();
-        
-        // 프로필 페이지 데이터 로드
         if (state.currentPage === 'profile') {
             loadProfileData();
         }
     } else {
-        // 사용자가 로그아웃한 경우
         state.currentUser = null;
-        
-        // UI 업데이트
         dom.loginButton.classList.remove('hidden');
         dom.userProfile.classList.add('hidden');
-        
-        // 프로젝트 선택 드롭다운 비우기
         clearProjectSelect();
     }
 }
 
-// 로그인 모달 열기
 function openLoginModal() {
     dom.loginModal.style.display = 'flex';
 }
 
-// 회원가입 모달 표시
 function showRegisterModal(e) {
     e.preventDefault();
     dom.loginModal.style.display = 'none';
     dom.registerModal.style.display = 'flex';
 }
 
-// 모든 모달 닫기
 function closeAllModals() {
     dom.allModals.forEach(modal => {
         modal.style.display = 'none';
     });
-    
-    // 공유 링크 다시 숨기기
     dom.shareLinks.classList.add('hidden');
 }
 
-// 로그인 처리
 function handleLogin(e) {
     e.preventDefault();
     
@@ -289,7 +239,6 @@ function handleLogin(e) {
         });
 }
 
-// 회원가입 처리
 function handleRegister(e) {
     e.preventDefault();
     
@@ -298,7 +247,6 @@ function handleRegister(e) {
     const password = document.getElementById('register-password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
     
-    // 비밀번호 확인
     if (password !== confirmPassword) {
         showNotification('비밀번호가 일치하지 않습니다.', 'error');
         return;
@@ -309,7 +257,6 @@ function handleRegister(e) {
             return userCredential.user.updateProfile({
                 displayName: username
             }).then(() => {
-                // 사용자 프로필 문서 생성
                 return firebase.firestore().collection('users').doc(userCredential.user.uid).set({
                     username: username,
                     email: email,
@@ -330,7 +277,6 @@ function handleRegister(e) {
         });
 }
 
-// 로그아웃 처리
 function handleLogout() {
     firebase.auth().signOut()
         .then(() => {
@@ -342,12 +288,9 @@ function handleLogout() {
         });
 }
 
-// 페이지 콘텐츠 로드
 function loadContent(pageName) {
-    // 현재 페이지 업데이트
     state.currentPage = pageName;
     
-    // 페이지 표시 설정
     dom.pages.forEach(page => {
         if (page.id === pageName + '-page') {
             page.classList.add('active');
@@ -356,10 +299,8 @@ function loadContent(pageName) {
         }
     });
     
-    // 페이지별 초기화 로직
     switch (pageName) {
         case 'playground':
-            // 플레이그라운드는 이미 초기화됨
             break;
         case 'community':
             loadCommunityPosts();
@@ -373,7 +314,6 @@ function loadContent(pageName) {
     }
 }
 
-// 네비게이션 링크 활성화
 function activateNavLink(linkElement) {
     dom.navLinks.forEach(link => {
         link.classList.remove('active');
@@ -381,33 +321,26 @@ function activateNavLink(linkElement) {
     linkElement.classList.add('active');
 }
 
-// 프로필 탭 활성화
 function activateProfileTab(tabElement, tabName) {
-    // 모든 탭 비활성화
     dom.profileTabs.forEach(tab => {
         tab.classList.remove('active');
     });
     tabElement.classList.add('active');
     
-    // 모든 탭 컨텐트 숨기기
     dom.tabContents.forEach(content => {
         content.classList.remove('active');
     });
     
-    // 선택한 탭 컨텐트 표시
     document.getElementById(tabName).classList.add('active');
 }
 
-// 알림 표시
 function showNotification(message, type = 'info') {
-    // 간단한 알림 구현
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
     
     document.body.appendChild(notification);
     
-    // 3초 후 알림 제거
     setTimeout(() => {
         notification.classList.add('fade-out');
         setTimeout(() => {
@@ -416,14 +349,11 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// 사용자 프로젝트 로드
 function loadUserProjects() {
     if (!state.currentUser) return;
     
-    // 프로젝트 선택 드롭다운 비우기
     clearProjectSelect();
     
-    // Firestore에서 사용자 프로젝트 로드
     firebase.firestore().collection('projects')
         .where('userId', '==', state.currentUser.uid)
         .orderBy('updatedAt', 'desc')
@@ -448,17 +378,13 @@ function loadUserProjects() {
         });
 }
 
-// 프로젝트 선택 드롭다운 비우기
 function clearProjectSelect() {
     dom.projectSelect.innerHTML = '';
 }
 
-// 커뮤니티 게시물 로드
 function loadCommunityPosts() {
-    // 게시물 컨테이너 비우기
     dom.postsContainer.innerHTML = '<div class="loading">게시물을 불러오는 중...</div>';
     
-    // Firestore에서 게시물 로드
     firebase.firestore().collection('posts')
         .orderBy('createdAt', 'desc')
         .limit(10)
@@ -478,8 +404,7 @@ function loadCommunityPosts() {
                 renderPostCard(post);
             });
             
-            // 총 페이지 수 계산 (간단한 예제용)
-            state.totalCommunityPages = 5; // 실제 구현에서는 총 게시물 수에 따라 계산
+            state.totalCommunityPages = 5;
             updateCommunityPagination();
         })
         .catch((error) => {
@@ -488,7 +413,6 @@ function loadCommunityPosts() {
         });
 }
 
-// 게시물 카드 렌더링
 function renderPostCard(post) {
     const postCard = document.createElement('div');
     postCard.className = 'post-card';
@@ -525,7 +449,6 @@ function renderPostCard(post) {
         </div>
     `;
     
-    // 게시물 클릭 이벤트 등록
     const titleLink = postCard.querySelector('.post-title a');
     const readMoreLink = postCard.querySelector('.post-read-more');
     
@@ -542,14 +465,12 @@ function renderPostCard(post) {
     dom.postsContainer.appendChild(postCard);
 }
 
-// 텍스트 자르기 유틸리티
 function truncateText(text, maxLength) {
     if (!text) return '';
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
 }
 
-// 커뮤니티 페이지 네비게이션
 function navigateCommunityPage(direction) {
     const newPage = state.communityPage + direction;
     
@@ -559,21 +480,18 @@ function navigateCommunityPage(direction) {
     
     state.communityPage = newPage;
     updateCommunityPagination();
-    loadCommunityPosts(); // 실제 구현에서는 페이지에 맞는 게시물 로드
+    loadCommunityPosts();
 }
 
-// 커뮤니티 페이지네이션 업데이트
 function updateCommunityPagination() {
     dom.pageInfo.textContent = `${state.communityPage} / ${state.totalCommunityPages}`;
     
-    // 이전 버튼 비활성화 여부
     if (state.communityPage <= 1) {
         dom.prevPageButton.disabled = true;
     } else {
         dom.prevPageButton.disabled = false;
     }
     
-    // 다음 버튼 비활성화 여부
     if (state.communityPage >= state.totalCommunityPages) {
         dom.nextPageButton.disabled = true;
     } else {
@@ -581,12 +499,9 @@ function updateCommunityPagination() {
     }
 }
 
-// 탐색 프로젝트 로드
 function loadExploreProjects() {
-    // 프로젝트 그리드 비우기
     dom.projectsGrid.innerHTML = '<div class="loading">프로젝트를 불러오는 중...</div>';
     
-    // Firestore에서 공개 프로젝트 로드
     firebase.firestore().collection('projects')
         .where('isPublic', '==', true)
         .orderBy('createdAt', 'desc')
@@ -607,8 +522,7 @@ function loadExploreProjects() {
                 renderProjectCard(project);
             });
             
-            // 총 페이지 수 계산 (간단한 예제용)
-            state.totalExplorePage = 8; // 실제 구현에서는 총 프로젝트 수에 따라 계산
+            state.totalExplorePage = 8;
             updateExplorePagination();
         })
         .catch((error) => {
@@ -617,7 +531,6 @@ function loadExploreProjects() {
         });
 }
 
-// 프로젝트 카드 렌더링
 function renderProjectCard(project) {
     const projectCard = document.createElement('div');
     projectCard.className = 'project-card';
@@ -654,7 +567,6 @@ function renderProjectCard(project) {
         </div>
     `;
     
-    // 프로젝트 클릭 이벤트 등록
     projectCard.addEventListener('click', () => {
         openProjectDetail(project.id);
     });
@@ -662,16 +574,13 @@ function renderProjectCard(project) {
     dom.projectsGrid.appendChild(projectCard);
 }
 
-// 태그 렌더링 유틸리티
 function renderTags(tags) {
     if (!tags || !Array.isArray(tags) || tags.length === 0) {
         return '';
     }
-    
     return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
 }
 
-// 탐색 페이지 네비게이션
 function navigateExplorePage(direction) {
     const newPage = state.explorePage + direction;
     
@@ -681,21 +590,18 @@ function navigateExplorePage(direction) {
     
     state.explorePage = newPage;
     updateExplorePagination();
-    loadExploreProjects(); // 실제 구현에서는 페이지에 맞는 프로젝트 로드
+    loadExploreProjects();
 }
 
-// 탐색 페이지네이션 업데이트
 function updateExplorePagination() {
     dom.projectsPageInfo.textContent = `${state.explorePage} / ${state.totalExplorePage}`;
     
-    // 이전 버튼 비활성화 여부
     if (state.explorePage <= 1) {
         dom.prevProjectsPageButton.disabled = true;
     } else {
         dom.prevProjectsPageButton.disabled = false;
     }
     
-    // 다음 버튼 비활성화 여부
     if (state.explorePage >= state.totalExplorePage) {
         dom.nextProjectsPageButton.disabled = true;
     } else {
@@ -703,7 +609,6 @@ function updateExplorePagination() {
     }
 }
 
-// 프로필 데이터 로드
 function loadProfileData() {
     if (!state.currentUser) {
         return;
@@ -711,13 +616,10 @@ function loadProfileData() {
     
     const userId = state.currentUser.uid;
     
-    // Firestore에서 사용자 정보 로드
     firebase.firestore().collection('users').doc(userId).get()
         .then((doc) => {
             if (doc.exists) {
                 const userData = doc.data();
-                
-                // 프로필 정보 업데이트
                 dom.profileUsername.textContent = userData.username || state.currentUser.displayName || '사용자';
                 dom.profileBio.textContent = userData.bio || '소개가 없습니다.';
                 
@@ -725,25 +627,18 @@ function loadProfileData() {
                     dom.profileAvatar.src = state.currentUser.photoURL;
                 }
                 
-                // 통계 업데이트
                 dom.followersCount.textContent = userData.followers || 0;
                 dom.followingCount.textContent = userData.following || 0;
                 
-                // 사용자 프로젝트 수 로드
                 firebase.firestore().collection('projects')
                     .where('userId', '==', userId)
                     .get()
                     .then((querySnapshot) => {
                         dom.projectsCount.textContent = querySnapshot.size;
-                        
-                        // 사용자 프로젝트 탭 콘텐츠 로드
                         loadUserProjectsTab(querySnapshot);
                     });
                 
-                // 사용자 게시물 탭 콘텐츠 로드
                 loadUserPostsTab(userId);
-                
-                // 사용자 업적 탭 콘텐츠 로드
                 loadUserAchievementsTab(userId);
             }
         })
@@ -753,7 +648,6 @@ function loadProfileData() {
         });
 }
 
-// 사용자 프로젝트 탭 로드
 function loadUserProjectsTab(querySnapshot) {
     const projectsGrid = document.querySelector('#user-projects .projects-grid');
     projectsGrid.innerHTML = '';
@@ -789,7 +683,6 @@ function loadUserProjectsTab(querySnapshot) {
             </div>
         `;
         
-        // 프로젝트 수정/삭제 이벤트 등록
         const editButton = projectCard.querySelector('.edit-project');
         const deleteButton = projectCard.querySelector('.delete-project');
         
@@ -803,7 +696,6 @@ function loadUserProjectsTab(querySnapshot) {
             confirmDeleteProject(project.id, project.title);
         });
         
-        // 프로젝트 카드 클릭 이벤트
         projectCard.addEventListener('click', () => {
             loadProjectForEditing(project.id);
         });
@@ -812,12 +704,10 @@ function loadUserProjectsTab(querySnapshot) {
     });
 }
 
-// 사용자 게시물 탭 로드
 function loadUserPostsTab(userId) {
     const postsList = document.querySelector('#user-posts .posts-list');
     postsList.innerHTML = '';
     
-    // Firestore에서 사용자 게시물 로드
     firebase.firestore().collection('posts')
         .where('userId', '==', userId)
         .orderBy('createdAt', 'desc')
@@ -860,7 +750,6 @@ function loadUserPostsTab(userId) {
                     </div>
                 `;
                 
-                // 게시물 수정/삭제 이벤트 등록
                 const editButton = postItem.querySelector('.edit-post');
                 const deleteButton = postItem.querySelector('.delete-post');
                 
@@ -881,12 +770,10 @@ function loadUserPostsTab(userId) {
         });
 }
 
-// 사용자 업적 탭 로드
 function loadUserAchievementsTab(userId) {
     const achievementsGrid = document.querySelector('#user-achievements .achievements-grid');
     achievementsGrid.innerHTML = '';
     
-    // 예시 업적 데이터
     const achievements = [
         {
             id: 'first-project',
@@ -933,5 +820,4 @@ function loadUserAchievementsTab(userId) {
     });
 }
 
-// 앱 초기화 실행
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', initProfile);

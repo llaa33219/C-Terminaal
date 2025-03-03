@@ -7,8 +7,8 @@ let currentUserData = null;
 let isCurrentUserProfile = false;
 let achievementCache = {};
 
-// DOM 요소
-const elements = {
+// DOM 요소 (이름 충돌 방지를 위해 profileElements로 변경)
+const profileElements = {
     profileUsername: document.getElementById('profile-username'),
     profileBio: document.getElementById('profile-bio'),
     profileAvatar: document.getElementById('profile-avatar'),
@@ -22,29 +22,23 @@ const elements = {
 
 // 프로필 초기화
 async function initProfile() {
-    // URL 매개변수 확인 (user 파라미터 존재 시 특정 사용자 프로필 표시)
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
     
     if (userId) {
-        // 다른 사용자 프로필 로드
         loadUserProfile(userId);
     } else if (firebase.auth().currentUser) {
-        // 자신의 프로필 로드
         loadCurrentUserProfile();
     } else {
-        // 로그인 유도
         showLoginPrompt();
     }
     
-    // 이벤트 리스너
     attachProfileEventListeners();
 }
 
 // 이벤트 리스너 등록
 function attachProfileEventListeners() {
-    // 프로필 탭 전환
-    elements.profileTabs.forEach(tab => {
+    profileElements.profileTabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
             const tabName = e.target.dataset.tab;
             if (tabName) {
@@ -53,9 +47,8 @@ function attachProfileEventListeners() {
         });
     });
     
-    // 프로필 수정 버튼
-    if (elements.editProfileButton) {
-        elements.editProfileButton.addEventListener('click', openEditProfileModal);
+    if (profileElements.editProfileButton) {
+        profileElements.editProfileButton.addEventListener('click', openEditProfileModal);
     }
 }
 
@@ -70,21 +63,16 @@ async function loadCurrentUserProfile() {
     isCurrentUserProfile = true;
     
     try {
-        // 사용자 데이터 로드
         const userDoc = await firebase.firestore().collection('users').doc(currentUserId).get();
         
         if (userDoc.exists) {
             currentUserData = userDoc.data();
             renderUserProfile(currentUserData);
         } else {
-            // 사용자 프로필이 없는 경우 생성
             await createUserProfile();
         }
         
-        // 사용자 프로젝트, 게시물, 업적 로드
         loadUserContent(currentUserId);
-        
-        // 팔로우 버튼 대신 프로필 수정 버튼 표시
         toggleProfileActionButton(true);
     } catch (error) {
         console.error('프로필 로드 오류:', error);
@@ -98,7 +86,6 @@ async function loadUserProfile(userId) {
         currentUserId = userId;
         isCurrentUserProfile = firebase.auth().currentUser && firebase.auth().currentUser.uid === userId;
         
-        // 사용자 데이터 로드
         const userDoc = await firebase.firestore().collection('users').doc(userId).get();
         
         if (!userDoc.exists) {
@@ -107,14 +94,9 @@ async function loadUserProfile(userId) {
         
         currentUserData = userDoc.data();
         renderUserProfile(currentUserData);
-        
-        // 사용자 프로젝트, 게시물, 업적 로드
         loadUserContent(userId);
-        
-        // 프로필 수정 버튼 또는 팔로우 버튼 표시
         toggleProfileActionButton(isCurrentUserProfile);
         
-        // 팔로우 상태 확인 및 버튼 업데이트
         if (!isCurrentUserProfile && firebase.auth().currentUser) {
             checkFollowStatus();
         }
@@ -146,11 +128,8 @@ async function createUserProfile() {
         };
         
         await firebase.firestore().collection('users').doc(user.uid).set(userData);
-        
         currentUserData = userData;
         renderUserProfile(userData);
-        
-        // 첫 로그인 업적 추가
         await addAchievement('first-login');
     } catch (error) {
         console.error('프로필 생성 오류:', error);
@@ -162,35 +141,33 @@ async function createUserProfile() {
 function renderUserProfile(userData) {
     if (!userData) return;
     
-    // 프로필 기본 정보
-    if (elements.profileUsername) {
-        elements.profileUsername.textContent = userData.username || '사용자';
+    if (profileElements.profileUsername) {
+        profileElements.profileUsername.textContent = userData.username || '사용자';
     }
     
-    if (elements.profileBio) {
-        elements.profileBio.textContent = userData.bio || '소개가 없습니다';
+    if (profileElements.profileBio) {
+        profileElements.profileBio.textContent = userData.bio || '소개가 없습니다';
     }
     
-    if (elements.profileAvatar) {
-        elements.profileAvatar.src = userData.avatarUrl || 'default-avatar.png';
-        elements.profileAvatar.alt = userData.username || '사용자';
+    if (profileElements.profileAvatar) {
+        profileElements.profileAvatar.src = userData.avatarUrl || 'default-avatar.png';
+        profileElements.profileAvatar.alt = userData.username || '사용자';
     }
     
-    // 통계 정보
-    if (elements.projectsCount) {
-        elements.projectsCount.textContent = userData.projectCount || 0;
+    if (profileElements.projectsCount) {
+        profileElements.projectsCount.textContent = userData.projectCount || 0;
     }
     
-    if (elements.followersCount) {
-        elements.followersCount.textContent = userData.followers || 0;
+    if (profileElements.followersCount) {
+        profileElements.followersCount.textContent = userData.followers || 0;
     }
     
-    if (elements.followingCount) {
-        elements.followingCount.textContent = userData.following || 0;
+    if (profileElements.followingCount) {
+        profileElements.followingCount.textContent = userData.following || 0;
     }
 }
 
-// 사용자 콘텐츠 로드 (프로젝트, 게시물, 업적)
+// 사용자 콘텐츠 로드
 async function loadUserContent(userId) {
     loadUserProjects(userId);
     loadUserPosts(userId);
@@ -200,45 +177,36 @@ async function loadUserContent(userId) {
 // 사용자 프로젝트 로드
 async function loadUserProjects(userId) {
     const projectsGrid = document.querySelector('#user-projects .projects-grid');
-    
     if (!projectsGrid) return;
     
     try {
-        // 로딩 표시
         projectsGrid.innerHTML = '<div class="loading">프로젝트를 불러오는 중...</div>';
         
-        // 프로젝트 조회
         let query = firebase.firestore().collection('projects')
             .where('userId', '==', userId)
             .orderBy('updatedAt', 'desc');
         
-        // 자신의 프로필이 아닌 경우 공개 프로젝트만 표시
         if (!isCurrentUserProfile) {
             query = query.where('isPublic', '==', true);
         }
         
         const snapshot = await query.get();
         
-        // 결과 처리
         if (snapshot.empty) {
             projectsGrid.innerHTML = '<div class="no-content">프로젝트가 없습니다</div>';
             return;
         }
         
-        // 프로젝트 표시
         projectsGrid.innerHTML = '';
-        
         snapshot.forEach(doc => {
             const project = { id: doc.id, ...doc.data() };
             renderProjectCard(project, projectsGrid);
         });
         
-        // 프로젝트 수 업데이트
-        if (elements.projectsCount) {
-            elements.projectsCount.textContent = snapshot.size;
+        if (profileElements.projectsCount) {
+            profileElements.projectsCount.textContent = snapshot.size;
         }
         
-        // 자신의 프로필인 경우 프로젝트 수 업데이트
         if (isCurrentUserProfile) {
             await firebase.firestore().collection('users').doc(userId).update({
                 projectCount: snapshot.size
@@ -299,18 +267,13 @@ function renderProjectCard(project, container) {
         </div>
     `;
     
-    // 프로젝트 클릭 이벤트
     projectCard.addEventListener('click', (e) => {
-        // 버튼 클릭은 무시
         if (e.target.tagName === 'BUTTON') {
             return;
         }
-        
-        // 프로젝트 상세 페이지로 이동
         openProjectDetail(project.id);
     });
     
-    // 수정 버튼 이벤트
     const editButton = projectCard.querySelector('.edit-project');
     if (editButton) {
         editButton.addEventListener('click', (e) => {
@@ -319,7 +282,6 @@ function renderProjectCard(project, container) {
         });
     }
     
-    // 삭제 버튼 이벤트
     const deleteButton = projectCard.querySelector('.delete-project');
     if (deleteButton) {
         deleteButton.addEventListener('click', (e) => {
@@ -336,7 +298,6 @@ function renderTags(tags) {
     if (!tags || !Array.isArray(tags) || tags.length === 0) {
         return '';
     }
-    
     return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
 }
 
@@ -350,28 +311,22 @@ function truncateText(text, maxLength) {
 // 사용자 게시물 로드
 async function loadUserPosts(userId) {
     const postsContainer = document.querySelector('#user-posts .posts-list');
-    
     if (!postsContainer) return;
     
     try {
-        // 로딩 표시
         postsContainer.innerHTML = '<div class="loading">게시물을 불러오는 중...</div>';
         
-        // 게시물 조회
         const snapshot = await firebase.firestore().collection('posts')
             .where('userId', '==', userId)
             .orderBy('createdAt', 'desc')
             .get();
         
-        // 결과 처리
         if (snapshot.empty) {
             postsContainer.innerHTML = '<div class="no-content">게시물이 없습니다</div>';
             return;
         }
         
-        // 게시물 표시
         postsContainer.innerHTML = '';
-        
         snapshot.forEach(doc => {
             const post = { id: doc.id, ...doc.data() };
             renderPostItem(post, postsContainer);
@@ -434,18 +389,13 @@ function renderPostItem(post, container) {
         </div>
     `;
     
-    // 게시물 클릭 이벤트
     postItem.addEventListener('click', (e) => {
-        // 버튼 클릭은 무시
         if (e.target.tagName === 'BUTTON') {
             return;
         }
-        
-        // 게시물 상세 페이지로 이동
         openPostDetail(post.id);
     });
     
-    // 수정 버튼 이벤트
     const editButton = postItem.querySelector('.edit-post');
     if (editButton) {
         editButton.addEventListener('click', (e) => {
@@ -454,7 +404,6 @@ function renderPostItem(post, container) {
         });
     }
     
-    // 삭제 버튼 이벤트
     const deleteButton = postItem.querySelector('.delete-post');
     if (deleteButton) {
         deleteButton.addEventListener('click', (e) => {
@@ -469,19 +418,14 @@ function renderPostItem(post, container) {
 // 사용자 업적 로드
 async function loadUserAchievements(userId) {
     const achievementsGrid = document.querySelector('#user-achievements .achievements-grid');
-    
     if (!achievementsGrid) return;
     
     try {
-        // 로딩 표시
         achievementsGrid.innerHTML = '<div class="loading">업적을 불러오는 중...</div>';
         
-        // 업적 데이터 로드
         const achievementsData = await getAchievementsData();
         
-        // 사용자 업적 로드
         const userDoc = await firebase.firestore().collection('users').doc(userId).get();
-        
         if (!userDoc.exists) {
             throw new Error('사용자를 찾을 수 없습니다');
         }
@@ -489,14 +433,10 @@ async function loadUserAchievements(userId) {
         const userData = userDoc.data();
         const userAchievements = userData.achievements || [];
         
-        // 업적 표시
         achievementsGrid.innerHTML = '';
-        
-        // 모든 업적 표시 (획득 여부 표시)
         Object.keys(achievementsData).forEach(achievementId => {
             const achievement = achievementsData[achievementId];
             const achieved = userAchievements.includes(achievementId);
-            
             renderAchievementCard(achievementId, achievement, achieved, achievementsGrid);
         });
     } catch (error) {
@@ -512,12 +452,10 @@ async function loadUserAchievements(userId) {
 
 // 모든 업적 데이터 가져오기
 async function getAchievementsData() {
-    // 캐시 확인
     if (Object.keys(achievementCache).length > 0) {
         return achievementCache;
     }
     
-    // 예시 업적 데이터 (실제 애플리케이션에서는 Firestore에서 로드)
     const achievements = {
         'first-login': {
             title: '환영합니다!',
@@ -569,15 +507,12 @@ async function getAchievementsData() {
         }
     };
     
-    // 캐시에 저장
     achievementCache = achievements;
-    
     return achievements;
 }
 
 // 업적 카드 렌더링
 function renderAchievementCard(achievementId, achievement, achieved, container) {
-    // 숨겨진 업적이면서 획득하지 않은 경우 표시하지 않음
     if (achievement.hidden && !achieved) {
         return;
     }
@@ -602,8 +537,6 @@ async function addAchievement(achievementId) {
     
     try {
         const userId = firebase.auth().currentUser.uid;
-        
-        // 업적 데이터 확인
         const achievementsData = await getAchievementsData();
         
         if (!achievementsData[achievementId]) {
@@ -611,9 +544,7 @@ async function addAchievement(achievementId) {
             return false;
         }
         
-        // 사용자 데이터 로드
         const userDoc = await firebase.firestore().collection('users').doc(userId).get();
-        
         if (!userDoc.exists) {
             console.error('사용자를 찾을 수 없음:', userId);
             return false;
@@ -622,20 +553,16 @@ async function addAchievement(achievementId) {
         const userData = userDoc.data();
         const userAchievements = userData.achievements || [];
         
-        // 이미 획득한 업적인지 확인
         if (userAchievements.includes(achievementId)) {
             return false;
         }
         
-        // 업적 추가
         userAchievements.push(achievementId);
         
-        // 사용자 문서 업데이트
         await firebase.firestore().collection('users').doc(userId).update({
             achievements: userAchievements
         });
         
-        // 알림 표시
         const achievement = achievementsData[achievementId];
         showNotification(`🎉 새 업적 획득: ${achievement.title}`, 'success');
         
@@ -653,7 +580,6 @@ async function checkFollowStatus() {
     try {
         const userId = firebase.auth().currentUser.uid;
         
-        // 이미 팔로우 중인지 확인
         const followDoc = await firebase.firestore().collection('follows')
             .where('followerId', '==', userId)
             .where('followingId', '==', currentUserId)
@@ -664,11 +590,9 @@ async function checkFollowStatus() {
         if (!followButton) return;
         
         if (!followDoc.empty) {
-            // 이미 팔로우 중
             followButton.textContent = '팔로우 취소';
             followButton.classList.add('following');
         } else {
-            // 팔로우 중이 아님
             followButton.textContent = '팔로우';
             followButton.classList.remove('following');
         }
@@ -686,14 +610,11 @@ async function toggleFollow() {
     
     try {
         const userId = firebase.auth().currentUser.uid;
-        
-        // 자기 자신을 팔로우할 수 없음
         if (userId === currentUserId) {
             showNotification('자기 자신을 팔로우할 수 없습니다.', 'error');
             return;
         }
         
-        // 이미 팔로우 중인지 확인
         const followQuery = firebase.firestore().collection('follows')
             .where('followerId', '==', userId)
             .where('followingId', '==', currentUserId);
@@ -701,36 +622,26 @@ async function toggleFollow() {
         const followDoc = await followQuery.get();
         
         if (!followDoc.empty) {
-            // 팔로우 취소
             const batch = firebase.firestore().batch();
-            
-            // 팔로우 문서 삭제
             followDoc.forEach(doc => {
                 batch.delete(doc.ref);
             });
-            
-            // 팔로워 수 감소
             batch.update(
                 firebase.firestore().collection('users').doc(currentUserId),
                 { followers: firebase.firestore.FieldValue.increment(-1) }
             );
-            
-            // 팔로잉 수 감소
             batch.update(
                 firebase.firestore().collection('users').doc(userId),
                 { following: firebase.firestore.FieldValue.increment(-1) }
             );
-            
             await batch.commit();
             
-            // 버튼 업데이트
             const followButton = document.getElementById('follow-button');
             if (followButton) {
                 followButton.textContent = '팔로우';
                 followButton.classList.remove('following');
             }
             
-            // 팔로워 수 UI 업데이트
             const followersCount = document.getElementById('followers-count');
             if (followersCount) {
                 const count = parseInt(followersCount.textContent) || 0;
@@ -739,39 +650,29 @@ async function toggleFollow() {
             
             showNotification('팔로우를 취소했습니다.', 'info');
         } else {
-            // 팔로우 추가
             const batch = firebase.firestore().batch();
-            
-            // 팔로우 문서 생성
             const followRef = firebase.firestore().collection('follows').doc();
             batch.set(followRef, {
                 followerId: userId,
                 followingId: currentUserId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            // 팔로워 수 증가
             batch.update(
                 firebase.firestore().collection('users').doc(currentUserId),
                 { followers: firebase.firestore.FieldValue.increment(1) }
             );
-            
-            // 팔로잉 수 증가
             batch.update(
                 firebase.firestore().collection('users').doc(userId),
                 { following: firebase.firestore.FieldValue.increment(1) }
             );
-            
             await batch.commit();
             
-            // 버튼 업데이트
             const followButton = document.getElementById('follow-button');
             if (followButton) {
                 followButton.textContent = '팔로우 취소';
                 followButton.classList.add('following');
             }
             
-            // 팔로워 수 UI 업데이트
             const followersCount = document.getElementById('followers-count');
             if (followersCount) {
                 const count = parseInt(followersCount.textContent) || 0;
@@ -779,8 +680,6 @@ async function toggleFollow() {
             }
             
             showNotification('팔로우했습니다.', 'success');
-            
-            // 소셜 버터플라이 업적 확인
             checkSocialButterflyAchievement();
         }
     } catch (error) {
@@ -795,16 +694,10 @@ async function checkSocialButterflyAchievement() {
     
     try {
         const userId = firebase.auth().currentUser.uid;
-        
-        // 팔로잉 수 확인
         const userDoc = await firebase.firestore().collection('users').doc(userId).get();
-        
         if (!userDoc.exists) return;
-        
         const userData = userDoc.data();
-        
         if (userData.following >= 5) {
-            // 업적 추가
             addAchievement('social-butterfly');
         }
     } catch (error) {
@@ -819,7 +712,6 @@ function openEditProfileModal() {
         return;
     }
     
-    // 모달 HTML 생성
     const modalHTML = `
         <div id="edit-profile-modal" class="modal">
             <div class="modal-content">
@@ -845,26 +737,21 @@ function openEditProfileModal() {
         </div>
     `;
     
-    // 모달 추가
     const modalContainer = document.createElement('div');
     modalContainer.innerHTML = modalHTML;
     document.body.appendChild(modalContainer.firstChild);
     
-    // 모달 엘리먼트
     const modal = document.getElementById('edit-profile-modal');
     const closeButton = modal.querySelector('.close-modal');
     const form = document.getElementById('edit-profile-form');
     
-    // 모달 표시
     modal.style.display = 'flex';
     
-    // 닫기 버튼 이벤트
     closeButton.addEventListener('click', () => {
         modal.style.display = 'none';
         document.body.removeChild(modal);
     });
     
-    // 폼 제출 이벤트
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         await updateUserProfile();
@@ -872,7 +759,6 @@ function openEditProfileModal() {
         document.body.removeChild(modal);
     });
     
-    // 모달 외부 클릭 시 닫기
     window.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.style.display = 'none';
@@ -890,19 +776,15 @@ async function updateUserProfile() {
     
     try {
         const userId = firebase.auth().currentUser.uid;
-        
-        // 입력값 가져오기
         const username = document.getElementById('profile-username-input').value.trim();
         const bio = document.getElementById('profile-bio-input').value.trim();
         const avatarUrl = document.getElementById('profile-avatar-url').value.trim();
         
-        // 유효성 검사
         if (!username) {
             showNotification('사용자명을 입력해주세요.', 'error');
             return;
         }
         
-        // 프로필 데이터
         const profileData = {
             username: username,
             bio: bio,
@@ -910,21 +792,14 @@ async function updateUserProfile() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Firebase 인증 표시 이름 업데이트
         await firebase.auth().currentUser.updateProfile({
             displayName: username,
             photoURL: avatarUrl || null
         });
         
-        // Firestore 사용자 데이터 업데이트
         await firebase.firestore().collection('users').doc(userId).update(profileData);
-        
-        // 로컬 상태 업데이트
         currentUserData = { ...currentUserData, ...profileData };
-        
-        // UI 업데이트
         renderUserProfile(currentUserData);
-        
         showNotification('프로필이 업데이트되었습니다.', 'success');
     } catch (error) {
         console.error('프로필 업데이트 오류:', error);
@@ -935,30 +810,25 @@ async function updateUserProfile() {
 // 프로필 수정 또는 팔로우 버튼 토글
 function toggleProfileActionButton(isOwnProfile) {
     const actionContainer = document.querySelector('.profile-header');
-    
     if (!actionContainer) return;
     
     const existingButton = document.getElementById('edit-profile');
     const existingFollowButton = document.getElementById('follow-button');
     
-    // 기존 버튼 제거
     if (existingFollowButton) {
         existingFollowButton.remove();
     }
     
     if (isOwnProfile) {
-        // 자신의 프로필인 경우 - 수정 버튼
         if (!existingButton) {
             const button = document.createElement('button');
             button.id = 'edit-profile';
             button.className = 'button';
             button.textContent = '프로필 수정';
             button.addEventListener('click', openEditProfileModal);
-            
             actionContainer.appendChild(button);
         }
     } else if (firebase.auth().currentUser) {
-        // 다른 사용자 프로필 - 팔로우 버튼
         const followButton = document.createElement('button');
         followButton.id = 'follow-button';
         followButton.className = 'button';
@@ -975,18 +845,15 @@ function toggleProfileActionButton(isOwnProfile) {
 
 // 프로필 탭 활성화
 function activateProfileTab(tabElement, tabName) {
-    // 모든 탭 비활성화
     document.querySelectorAll('.tab-button').forEach(tab => {
         tab.classList.remove('active');
     });
     tabElement.classList.add('active');
     
-    // 모든 탭 콘텐츠 숨기기
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
     
-    // 선택한 탭 콘텐츠 표시
     const contentElement = document.getElementById(tabName);
     if (contentElement) {
         contentElement.classList.add('active');
@@ -996,7 +863,6 @@ function activateProfileTab(tabElement, tabName) {
 // 로그인 유도 메시지
 function showLoginPrompt() {
     const container = document.querySelector('.profile-container');
-    
     if (!container) return;
     
     container.innerHTML = `
@@ -1008,7 +874,6 @@ function showLoginPrompt() {
     `;
     
     const loginButton = document.getElementById('login-prompt-button');
-    
     if (loginButton) {
         loginButton.addEventListener('click', () => {
             if (typeof openLoginModal === 'function') {
@@ -1043,20 +908,17 @@ async function deleteProject(projectId) {
         const result = await window.storageFunctions.deleteProject(projectId);
         
         if (result.success) {
-            // UI에서 프로젝트 카드 제거
             const projectCard = document.querySelector(`.project-card[data-project-id="${projectId}"]`);
             if (projectCard) {
                 projectCard.remove();
             }
             
-            // 프로젝트 수 업데이트
             const projectsCount = document.getElementById('projects-count');
             if (projectsCount) {
                 const count = parseInt(projectsCount.textContent) || 0;
                 projectsCount.textContent = Math.max(0, count - 1);
             }
             
-            // 프로젝트가 없는 경우 메시지 표시
             const projectsGrid = document.querySelector('#user-projects .projects-grid');
             if (projectsGrid && projectsGrid.childElementCount === 0) {
                 projectsGrid.innerHTML = '<div class="no-content">프로젝트가 없습니다</div>';
@@ -1091,13 +953,11 @@ async function deletePost(postId) {
         
         await window.communityFunctions.deletePost(postId);
         
-        // UI에서 게시물 아이템 제거
         const postItem = document.querySelector(`.post-item[data-post-id="${postId}"]`);
         if (postItem) {
             postItem.remove();
         }
         
-        // 게시물이 없는 경우 메시지 표시
         const postsContainer = document.querySelector('#user-posts .posts-list');
         if (postsContainer && postsContainer.childElementCount === 0) {
             postsContainer.innerHTML = '<div class="no-content">게시물이 없습니다</div>';
@@ -1109,7 +969,6 @@ async function deletePost(postId) {
 
 // 프로젝트 상세 페이지 열기
 function openProjectDetail(projectId) {
-    // 프로젝트 매개변수가 있는 URL로 이동
     window.location.href = `?project=${projectId}`;
 }
 
@@ -1118,24 +977,19 @@ function openPostDetail(postId) {
     if (typeof window.communityFunctions === 'object' && 
         typeof window.communityFunctions.openPostDetail === 'function') {
         
-        // 커뮤니티 페이지로 이동
         const communityLink = document.querySelector('nav a[data-page="community"]');
         if (communityLink) {
             communityLink.click();
         }
         
-        // 게시물 상세 페이지 열기
         window.communityFunctions.openPostDetail(postId);
     } else {
-        // 직접 URL로 이동
         window.location.href = `?post=${postId}`;
     }
 }
 
 // 초기화 함수 등록
 window.initProfile = initProfile;
-
-// 외부에서 사용할 함수 공개
 window.profileFunctions = {
     loadUserProfile,
     toggleFollow,

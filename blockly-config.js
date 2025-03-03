@@ -1,13 +1,10 @@
 // C-Terminaal 블록리 설정 스크립트
 // 블록 코딩 환경 초기화 및 사용자 정의 블록 생성
 
-// 전역 변수
 let workspace = null;
 let toolbox = null;
 
-// Blockly 초기화
 function initBlockly() {
-    // 툴박스 정의
     toolbox = {
         "kind": "categoryToolbox",
         "contents": [
@@ -16,34 +13,13 @@ function initBlockly() {
                 "name": "논리",
                 "categorystyle": "logic_category",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "controls_if"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "logic_compare"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "logic_operation"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "logic_negate"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "logic_boolean"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "logic_null"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "logic_ternary"
-                    }
+                    { "kind": "block", "type": "controls_if" },
+                    { "kind": "block", "type": "logic_compare" },
+                    { "kind": "block", "type": "logic_operation" },
+                    { "kind": "block", "type": "logic_negate" },
+                    { "kind": "block", "type": "logic_boolean" },
+                    { "kind": "block", "type": "logic_null" },
+                    { "kind": "block", "type": "logic_ternary" }
                 ]
             },
             {
@@ -51,26 +27,11 @@ function initBlockly() {
                 "name": "반복",
                 "categorystyle": "loop_category",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "controls_repeat_ext"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "controls_whileUntil"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "controls_for"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "controls_forEach"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "controls_flow_statements"
-                    }
+                    { "kind": "block", "type": "controls_repeat_ext" },
+                    { "kind": "block", "type": "controls_whileUntil" },
+                    { "kind": "block", "type": "controls_for" },
+                    { "kind": "block", "type": "controls_forEach" },
+                    { "kind": "block", "type": "controls_flow_statements" }
                 ]
             },
             {
@@ -78,54 +39,18 @@ function initBlockly() {
                 "name": "수학",
                 "categorystyle": "math_category",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "math_number"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_arithmetic"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_single"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_trig"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_constant"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_number_property"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_round"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_on_list"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_modulo"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_constrain"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_random_int"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "math_random_float"
-                    }
+                    { "kind": "block", "type": "math_number" },
+                    { "kind": "block", "type": "math_arithmetic" },
+                    { "kind": "block", "type": "math_single" },
+                    { "kind": "block", "type": "math_trig" },
+                    { "kind": "block", "type": "math_constant" },
+                    { "kind": "block", "type": "math_number_property" },
+                    { "kind": "block", "type": "math_round" },
+                    { "kind": "block", "type": "math_on_list" },
+                    { "kind": "block", "type": "math_modulo" },
+                    { "kind": "block", "type": "math_constrain" },
+                    { "kind": "block", "type": "math_random_int" },
+                    { "kind": "block", "type": "math_random_float" }
                 ]
             },
             {
@@ -133,54 +58,18 @@ function initBlockly() {
                 "name": "텍스트",
                 "categorystyle": "text_category",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "text"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_join"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_append"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_length"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_isEmpty"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_indexOf"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_charAt"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_getSubstring"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_changeCase"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_trim"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_print"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "text_prompt_ext"
-                    }
+                    { "kind": "block", "type": "text" },
+                    { "kind": "block", "type": "text_join" },
+                    { "kind": "block", "type": "text_append" },
+                    { "kind": "block", "type": "text_length" },
+                    { "kind": "block", "type": "text_isEmpty" },
+                    { "kind": "block", "type": "text_indexOf" },
+                    { "kind": "block", "type": "text_charAt" },
+                    { "kind": "block", "type": "text_getSubstring" },
+                    { "kind": "block", "type": "text_changeCase" },
+                    { "kind": "block", "type": "text_trim" },
+                    { "kind": "block", "type": "text_print" },
+                    { "kind": "block", "type": "text_prompt_ext" }
                 ]
             },
             {
@@ -188,54 +77,18 @@ function initBlockly() {
                 "name": "리스트",
                 "categorystyle": "list_category",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "lists_create_with"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_create_empty"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_repeat"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_length"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_isEmpty"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_indexOf"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_getIndex"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_setIndex"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_getSublist"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_sort"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_split"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "lists_reverse"
-                    }
+                    { "kind": "block", "type": "lists_create_with" },
+                    { "kind": "block", "type": "lists_create_empty" },
+                    { "kind": "block", "type": "lists_repeat" },
+                    { "kind": "block", "type": "lists_length" },
+                    { "kind": "block", "type": "lists_isEmpty" },
+                    { "kind": "block", "type": "lists_indexOf" },
+                    { "kind": "block", "type": "lists_getIndex" },
+                    { "kind": "block", "type": "lists_setIndex" },
+                    { "kind": "block", "type": "lists_getSublist" },
+                    { "kind": "block", "type": "lists_sort" },
+                    { "kind": "block", "type": "lists_split" },
+                    { "kind": "block", "type": "lists_reverse" }
                 ]
             },
             {
@@ -255,22 +108,10 @@ function initBlockly() {
                 "name": "터미널",
                 "colour": "#5C6BC0",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "terminal_print"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "terminal_input"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "terminal_clear"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "terminal_set_color"
-                    }
+                    { "kind": "block", "type": "terminal_print" },
+                    { "kind": "block", "type": "terminal_input" },
+                    { "kind": "block", "type": "terminal_clear" },
+                    { "kind": "block", "type": "terminal_set_color" }
                 ]
             },
             {
@@ -278,28 +119,15 @@ function initBlockly() {
                 "name": "고급",
                 "colour": "#FFB74D",
                 "contents": [
-                    {
-                        "kind": "block",
-                        "type": "terminal_animate"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "terminal_draw"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "terminal_progress"
-                    },
-                    {
-                        "kind": "block",
-                        "type": "terminal_sleep"
-                    }
+                    { "kind": "block", "type": "terminal_animate" },
+                    { "kind": "block", "type": "terminal_draw" },
+                    { "kind": "block", "type": "terminal_progress" },
+                    { "kind": "block", "type": "terminal_sleep" }
                 ]
             }
         ]
     };
 
-    // 워크스페이스 생성
     workspace = Blockly.inject('blockly-div', {
         toolbox: toolbox,
         grid: {
@@ -319,21 +147,16 @@ function initBlockly() {
         trashcan: true
     });
 
-    // 사용자 정의 블록 등록
     defineCustomBlocks();
 
-    // 최초 실행 블록 추가
     if (workspace.getAllBlocks().length === 0) {
         addStartBlock();
     }
 
-    // 워크스페이스 변경 이벤트 등록
     workspace.addChangeListener(onWorkspaceChange);
 }
 
-// 사용자 정의 블록 정의
 function defineCustomBlocks() {
-    // 터미널 출력 블록
     Blockly.Blocks['terminal_print'] = {
         init: function() {
             this.appendValueInput('TEXT')
@@ -347,7 +170,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 터미널 입력 블록
     Blockly.Blocks['terminal_input'] = {
         init: function() {
             this.appendDummyInput()
@@ -360,7 +182,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 터미널 지우기 블록
     Blockly.Blocks['terminal_clear'] = {
         init: function() {
             this.appendDummyInput()
@@ -373,7 +194,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 터미널 색상 설정 블록
     Blockly.Blocks['terminal_set_color'] = {
         init: function() {
             this.appendDummyInput()
@@ -397,7 +217,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 애니메이션 텍스트 블록
     Blockly.Blocks['terminal_animate'] = {
         init: function() {
             this.appendValueInput('TEXT')
@@ -414,7 +233,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 그리기 블록
     Blockly.Blocks['terminal_draw'] = {
         init: function() {
             this.appendDummyInput()
@@ -436,7 +254,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 진행 막대 블록
     Blockly.Blocks['terminal_progress'] = {
         init: function() {
             this.appendValueInput('PERCENT')
@@ -453,7 +270,6 @@ function defineCustomBlocks() {
         }
     };
 
-    // 대기 블록
     Blockly.Blocks['terminal_sleep'] = {
         init: function() {
             this.appendValueInput('TIME')
@@ -467,98 +283,83 @@ function defineCustomBlocks() {
         }
     };
 
-    // 코드 생성 규칙 등록
     registerCodeGenerators();
 }
 
-// JavaScript 코드 생성 규칙 등록
 function registerCodeGenerators() {
-    // 터미널 출력
     Blockly.JavaScript['terminal_print'] = function(block) {
         const text = Blockly.JavaScript.valueToCode(block, 'TEXT', Blockly.JavaScript.ORDER_ATOMIC) || "''";
         return `terminalPrint(${text});\n`;
     };
 
-    // 터미널 입력
     Blockly.JavaScript['terminal_input'] = function(block) {
         const prompt = block.getFieldValue('PROMPT');
         return [`terminalInput("${prompt}")`, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
-    // 터미널 지우기
     Blockly.JavaScript['terminal_clear'] = function(block) {
         return 'terminalClear();\n';
     };
 
-    // 터미널 색상 설정
     Blockly.JavaScript['terminal_set_color'] = function(block) {
         const color = block.getFieldValue('COLOR');
         return `terminalSetColor("${color}");\n`;
     };
 
-    // 애니메이션 텍스트
     Blockly.JavaScript['terminal_animate'] = function(block) {
         const text = Blockly.JavaScript.valueToCode(block, 'TEXT', Blockly.JavaScript.ORDER_ATOMIC) || "''";
         const speed = Blockly.JavaScript.valueToCode(block, 'SPEED', Blockly.JavaScript.ORDER_ATOMIC) || '50';
         return `terminalAnimate(${text}, ${speed});\n`;
     };
 
-    // 그리기
     Blockly.JavaScript['terminal_draw'] = function(block) {
         const pattern = block.getFieldValue('PATTERN');
         const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '5';
         return `terminalDraw("${pattern}", ${size});\n`;
     };
 
-    // 진행 막대
     Blockly.JavaScript['terminal_progress'] = function(block) {
         const percent = Blockly.JavaScript.valueToCode(block, 'PERCENT', Blockly.JavaScript.ORDER_ATOMIC) || '0';
         const length = block.getFieldValue('LENGTH');
         return `terminalProgress(${percent}, ${length});\n`;
     };
 
-    // 대기
     Blockly.JavaScript['terminal_sleep'] = function(block) {
         const time = Blockly.JavaScript.valueToCode(block, 'TIME', Blockly.JavaScript.ORDER_ATOMIC) || '1000';
         return `await terminalSleep(${time});\n`;
     };
 }
 
-// 시작 블록 추가
 function addStartBlock() {
     const startBlock = workspace.newBlock('terminal_print');
     startBlock.initSvg();
     startBlock.render();
     
-    // 값 블록 추가
     const textBlock = workspace.newBlock('text');
     textBlock.setFieldValue('안녕하세요! C-Terminaal에 오신 것을 환영합니다!', 'TEXT');
     textBlock.initSvg();
     textBlock.render();
     
-    // 블록 연결
     const connection = startBlock.getInput('TEXT').connection;
     connection.connect(textBlock.outputConnection);
     
-    // 블록 위치 조정
     startBlock.moveBy(50, 50);
 }
 
-// 작업 영역 변경 이벤트 핸들러
 function onWorkspaceChange(event) {
-    // 변경 이벤트에 따른 필요한 처리를 여기에 추가
     if (event.type === Blockly.Events.BLOCK_CREATE ||
         event.type === Blockly.Events.BLOCK_DELETE ||
         event.type === Blockly.Events.BLOCK_CHANGE ||
         event.type === Blockly.Events.BLOCK_MOVE) {
-        
         // 코드 생성 및 표시 기능은 실행 시점에만 처리
     }
 }
 
-// Blockly -> JavaScript 코드 변환
+// 워크스페이스 -> JavaScript 코드 변환 (워크스페이스 체크 추가)
 function generateCode() {
-    // 비동기 함수를 사용할 수 있도록 async 함수로 감싸기
+    if (!workspace) {
+        return "terminalPrint('워크스페이스가 정의되지 않았습니다.');\n";
+    }
     const code = `
     (async function() {
         try {
@@ -569,18 +370,15 @@ function generateCode() {
         }
     })();
     `;
-    
     return code;
 }
 
-// 블록 작업 공간 저장
 function saveWorkspace() {
     const xml = Blockly.Xml.workspaceToDom(workspace);
     const xmlText = Blockly.Xml.domToText(xml);
     return xmlText;
 }
 
-// 블록 작업 공간 불러오기
 function loadWorkspace(xmlText) {
     try {
         workspace.clear();
@@ -593,21 +391,17 @@ function loadWorkspace(xmlText) {
     }
 }
 
-// 현재 프로젝트 새로 만들기
 function newWorkspace() {
     workspace.clear();
     addStartBlock();
 }
 
-// 코드 실행 중지
 function stopExecution() {
-    // 터미널에서 처리
     if (typeof terminateExecution === 'function') {
         terminateExecution();
     }
 }
 
-// 외부에서 사용할 함수 공개
 window.blocklyFunctions = {
     generateCode,
     saveWorkspace,
@@ -616,7 +410,6 @@ window.blocklyFunctions = {
     stopExecution
 };
 
-// Blockly 전역화 (다른 모듈에서 접근 가능하도록)
 window.blocklyWorkspace = function() {
     return workspace;
 };
