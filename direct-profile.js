@@ -127,3 +127,63 @@ setInterval(function() {
       console.log('프로필 링크에 이벤트가 성공적으로 연결됨');
     }
   }, 1000);
+
+  // 테스트 버튼 이벤트 추가
+window.addEventListener('load', function() {
+    const testBtn = document.getElementById('test-profile-btn');
+    if (testBtn) {
+      testBtn.addEventListener('click', function() {
+        console.log('테스트 버튼 클릭됨');
+        
+        // profile-section 확인
+        const profileSection = document.getElementById('profile-section');
+        console.log('프로필 섹션 존재 여부:', !!profileSection);
+        
+        if (profileSection) {
+          // 모든 섹션 숨기기
+          document.querySelectorAll('.section').forEach(function(section) {
+            section.style.display = 'none';
+          });
+          
+          // 프로필 섹션 강제 표시
+          profileSection.style.display = 'block';
+          profileSection.style.opacity = '1';
+          profileSection.style.visibility = 'visible';
+          
+          console.log('프로필 섹션 표시됨');
+          
+          // 마이페이지 탐색 메뉴 활성화
+          document.querySelectorAll('.nav-links a').forEach(link => {
+            link.classList.remove('active');
+          });
+          
+          const profileNav = document.getElementById('nav-profile');
+          if (profileNav) profileNav.classList.add('active');
+        } else {
+          console.error('profile-section이 존재하지 않습니다! HTML을 확인하세요.');
+        }
+      });
+    }
+  });
+
+  // 페이지 로드 시 섹션 디버깅
+window.addEventListener('load', function() {
+    console.log('=== 섹션 디버깅 정보 ===');
+    const sections = document.querySelectorAll('.section');
+    console.log(`총 ${sections.length}개 섹션 발견`);
+    
+    sections.forEach(function(section) {
+      console.log(`섹션 ID: ${section.id}, 표시 상태: ${section.style.display}`);
+    });
+    
+    const profileSection = document.getElementById('profile-section');
+    if (profileSection) {
+      console.log('프로필 섹션 정보:');
+      console.log('- ID:', profileSection.id);
+      console.log('- 클래스:', profileSection.className);
+      console.log('- 표시 상태:', profileSection.style.display);
+      console.log('- HTML 구조:', profileSection.innerHTML.substring(0, 100) + '...');
+    } else {
+      console.error('profile-section을 찾을 수 없습니다!');
+    }
+  });
