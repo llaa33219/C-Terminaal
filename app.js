@@ -761,6 +761,87 @@ function initPlayground() {
     };
     
     try {
+        // 블록 모양 및 스타일을 변경하는 커스텀 렌더러 생성
+        Blockly.blockRendering.ConstantProvider.prototype.CORNER_RADIUS = 10; // 모서리 둥글기 정도
+        Blockly.blockRendering.ConstantProvider.prototype.NO_PADDING = 0; // 내부 패딩 제거
+        Blockly.blockRendering.ConstantProvider.prototype.SHADOW_OFFSET = 0; // 그림자 제거
+        Blockly.blockRendering.ConstantProvider.prototype.NOTCH_WIDTH = 20; // 노치 너비 조정
+        Blockly.blockRendering.ConstantProvider.prototype.OUTSIDE_CORNER_RADIUS = 10; // 외부 코너도 둥글게
+
+        // 테두리 두께
+        const BORDER_WIDTH = 3;
+
+        // 기존 블록 스타일 재정의를 위한 커스텀 렌더러 정의
+        class CustomRenderer extends Blockly.blockRendering.Renderer {
+          constructor() {
+            super();
+          }
+
+          // 테두리 스타일 재정의
+          makePathObject(constants) {
+            const pathObject = super.makePathObject(constants);
+            
+            // 기존 바로 채우기 동작 대신 채우기 + 테두리 그리기
+            const originalDrawSolid = pathObject.drawSolidHighlighted;
+            pathObject.drawSolidHighlighted = function(pattern, colour) {
+              // 먼저 내부 채우기
+              originalDrawSolid.call(this, pattern, colour);
+              
+              // 테두리 색상 계산 (기본 색상보다 약간 어둡게)
+              const darkerColour = Blockly.utils.colour.blend('#000000', colour, 0.2);
+              
+              // 테두리 추가
+              this.ctx_.save();
+              this.ctx_.strokeStyle = darkerColour;
+              this.ctx_.lineWidth = BORDER_WIDTH;
+              this.ctx_.lineJoin = 'round';
+              this.ctx_.stroke();
+              this.ctx_.restore();
+            };
+            
+            return pathObject;
+          }
+        }
+
+        // 커스텀 테마 생성
+        const customTheme = Blockly.Theme.defineTheme('simpleRounded', {
+          'base': Blockly.Themes.Classic,
+          'blockStyles': {
+            // 각 카테고리별 색상을 여기서 조정할 수 있습니다.
+            'logic_blocks': { 'colourPrimary': '#5C81A6' },
+            'loop_blocks': { 'colourPrimary': '#5CA65C' },
+            'math_blocks': { 'colourPrimary': '#5CA65C' },
+            'text_blocks': { 'colourPrimary': '#A65CA6' },
+            'variable_blocks': { 'colourPrimary': '#A6745C' },
+            'procedure_blocks': { 'colourPrimary': '#745CA6' },
+            'terminal_blocks': { 'colourPrimary': '#333333' },
+            'styling_blocks': { 'colourPrimary': '#FF9800' },
+            'output_blocks': { 'colourPrimary': '#2196F3' },
+            'animation_blocks': { 'colourPrimary': '#E91E63' },
+            'chart_blocks': { 'colourPrimary': '#00BCD4' },
+            'ui_blocks': { 'colourPrimary': '#9C27B0' },
+            'list_blocks': { 'colourPrimary': '#A6745C' },
+            'array_blocks': { 'colourPrimary': '#A6745C' },
+            'string_blocks': { 'colourPrimary': '#A65CA6' },
+            'time_blocks': { 'colourPrimary': '#5C81A6' },
+            'game_blocks': { 'colourPrimary': '#FF5252' },
+            'algorithm_blocks': { 'colourPrimary': '#795548' }
+          },
+          'componentStyles': {
+            'workspaceBackgroundColour': '#f5f5f5',
+            'toolboxBackgroundColour': '#fafafa',
+            'toolboxForegroundColour': '#333',
+            'flyoutBackgroundColour': '#f0f0f0',
+            'flyoutForegroundColour': '#333',
+            'flyoutOpacity': 0.9,
+            'scrollbarColour': '#bbb',
+            'scrollbarOpacity': 0.5
+          }
+        });
+
+        // 커스텀 렌더러 등록
+        Blockly.blockRendering.register('custom_renderer', CustomRenderer);
+        
         // Blockly 초기화
         workspace = Blockly.inject('blockly-container', {
             toolbox: toolbox,
@@ -780,7 +861,9 @@ function initPlayground() {
                 length: 3,
                 colour: '#ccc',
                 snap: true
-            }
+            },
+            theme: customTheme,              // 커스텀 테마 적용
+            renderer: 'custom_renderer'      // 커스텀 렌더러 적용
         });
         
         // 저장된 프로젝트 불러오기
