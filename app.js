@@ -772,65 +772,73 @@ function initPlayground() {
         Blockly.blockRendering.ConstantProvider.prototype.TAB_RADIUS = 20; // 탭 모서리 둥글기
 
         // 테두리 두께
-        const BORDER_WIDTH = 3;
+        const BORDER_WIDTH = 4; // 테두리 두께 증가
 
         // 기존 블록 스타일 재정의를 위한 커스텀 렌더러 정의
         class CustomRenderer extends Blockly.blockRendering.Renderer {
-          constructor() {
+        constructor() {
             super();
-          }
+        }
 
-          // 테두리 스타일 재정의
-          makePathObject(constants) {
+        // 테두리 스타일 재정의
+        makePathObject(constants) {
             const pathObject = super.makePathObject(constants);
             
             // 기존 바로 채우기 동작 대신 채우기 + 테두리 그리기
             const originalDrawSolid = pathObject.drawSolidHighlighted;
             pathObject.drawSolidHighlighted = function(pattern, colour) {
-              // 먼저 내부 채우기
-              originalDrawSolid.call(this, pattern, colour);
-              
-              // 테두리 색상 계산 (기본 색상보다 약간 어둡게)
-              const darkerColour = Blockly.utils.colour.blend('#000000', colour, 0.2);
-              
-              // 테두리 추가
-              this.ctx_.save();
-              this.ctx_.strokeStyle = darkerColour;
-              this.ctx_.lineWidth = BORDER_WIDTH;
-              this.ctx_.lineJoin = 'round';
-              this.ctx_.stroke();
-              this.ctx_.restore();
+            // 먼저 내부 채우기
+            originalDrawSolid.call(this, pattern, colour);
+            
+            // 테두리 색상 계산 (기본 색상보다 약간 어둡게)
+            const darkerColour = Blockly.utils.colour.blend('#000000', colour, 0.3); // 테두리 색상 더 진하게
+            
+            // 테두리 추가
+            this.ctx_.save();
+            this.ctx_.strokeStyle = darkerColour;
+            this.ctx_.lineWidth = BORDER_WIDTH;
+            this.ctx_.lineJoin = 'round';
+            this.ctx_.lineCap = 'round';
+            this.ctx_.stroke();
+            this.ctx_.restore();
             };
             
             return pathObject;
-          }
         }
 
-        // 커스텀 테마 생성
+        // 블록 연결 형태 강제 변경
+        makeNotch(constants) {
+            const notch = super.makeNotch(constants);
+            // 여기서 노치(블록 연결부) 모양을 보다 둥글게 수정할 수 있음
+            return notch;
+        }
+        }
+
+        // 커스텀 테마 생성 - 블록 색상을 보다 선명하게 조정
         const customTheme = Blockly.Theme.defineTheme('simpleRounded', {
-          'base': Blockly.Themes.Classic,
-          'blockStyles': {
-            // 각 카테고리별 색상을 여기서 조정할 수 있습니다.
-            'logic_blocks': { 'colourPrimary': '#5C81A6' },
-            'loop_blocks': { 'colourPrimary': '#5CA65C' },
-            'math_blocks': { 'colourPrimary': '#5CA65C' },
-            'text_blocks': { 'colourPrimary': '#A65CA6' },
-            'variable_blocks': { 'colourPrimary': '#A6745C' },
-            'procedure_blocks': { 'colourPrimary': '#745CA6' },
-            'terminal_blocks': { 'colourPrimary': '#333333' },
-            'styling_blocks': { 'colourPrimary': '#FF9800' },
-            'output_blocks': { 'colourPrimary': '#2196F3' },
-            'animation_blocks': { 'colourPrimary': '#E91E63' },
-            'chart_blocks': { 'colourPrimary': '#00BCD4' },
-            'ui_blocks': { 'colourPrimary': '#9C27B0' },
-            'list_blocks': { 'colourPrimary': '#A6745C' },
-            'array_blocks': { 'colourPrimary': '#A6745C' },
-            'string_blocks': { 'colourPrimary': '#A65CA6' },
-            'time_blocks': { 'colourPrimary': '#5C81A6' },
-            'game_blocks': { 'colourPrimary': '#FF5252' },
-            'algorithm_blocks': { 'colourPrimary': '#795548' }
-          },
-          'componentStyles': {
+        'base': Blockly.Themes.Classic,
+        'blockStyles': {
+            // 각 카테고리별 색상 조정 - 더 밝고 선명하게
+            'logic_blocks': { 'colourPrimary': '#6b96c1' },
+            'loop_blocks': { 'colourPrimary': '#6bc16b' },
+            'math_blocks': { 'colourPrimary': '#5cd65c' },
+            'text_blocks': { 'colourPrimary': '#c16bc1' },
+            'variable_blocks': { 'colourPrimary': '#c18b6b' },
+            'procedure_blocks': { 'colourPrimary': '#8b6bc1' },
+            'terminal_blocks': { 'colourPrimary': '#5a5a5a' },
+            'styling_blocks': { 'colourPrimary': '#ffad33' },
+            'output_blocks': { 'colourPrimary': '#33adff' },
+            'animation_blocks': { 'colourPrimary': '#ff3377' },
+            'chart_blocks': { 'colourPrimary': '#33ddff' },
+            'ui_blocks': { 'colourPrimary': '#b333ff' },
+            'list_blocks': { 'colourPrimary': '#c18b6b' },
+            'array_blocks': { 'colourPrimary': '#c18b6b' },
+            'string_blocks': { 'colourPrimary': '#c16bc1' },
+            'time_blocks': { 'colourPrimary': '#6b96c1' },
+            'game_blocks': { 'colourPrimary': '#ff6b6b' },
+            'algorithm_blocks': { 'colourPrimary': '#8d6e63' }
+        },
+        'componentStyles': {
             'workspaceBackgroundColour': '#f5f5f5',
             'toolboxBackgroundColour': '#fafafa',
             'toolboxForegroundColour': '#333',
@@ -839,7 +847,7 @@ function initPlayground() {
             'flyoutOpacity': 0.9,
             'scrollbarColour': '#bbb',
             'scrollbarOpacity': 0.5
-          }
+        }
         });
 
         // 커스텀 렌더러 등록
