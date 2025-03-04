@@ -762,11 +762,14 @@ function initPlayground() {
     
     try {
         // 블록 모양 및 스타일을 변경하는 커스텀 렌더러 생성
-        Blockly.blockRendering.ConstantProvider.prototype.CORNER_RADIUS = 10; // 모서리 둥글기 정도
+        Blockly.blockRendering.ConstantProvider.prototype.CORNER_RADIUS = 25; // 모서리 둥글기 정도 증가
+        Blockly.blockRendering.ConstantProvider.prototype.OUTSIDE_CORNER_RADIUS = 25; // 외부 코너도 동일하게 둥글게
         Blockly.blockRendering.ConstantProvider.prototype.NO_PADDING = 0; // 내부 패딩 제거
         Blockly.blockRendering.ConstantProvider.prototype.SHADOW_OFFSET = 0; // 그림자 제거
         Blockly.blockRendering.ConstantProvider.prototype.NOTCH_WIDTH = 20; // 노치 너비 조정
-        Blockly.blockRendering.ConstantProvider.prototype.OUTSIDE_CORNER_RADIUS = 10; // 외부 코너도 둥글게
+        Blockly.blockRendering.ConstantProvider.prototype.NOTCH_HEIGHT = 15; // 노치 높이 조정
+        Blockly.blockRendering.ConstantProvider.prototype.TAB_HEIGHT = 20; // 탭 높이 조정
+        Blockly.blockRendering.ConstantProvider.prototype.TAB_RADIUS = 20; // 탭 모서리 둥글기
 
         // 테두리 두께
         const BORDER_WIDTH = 3;
