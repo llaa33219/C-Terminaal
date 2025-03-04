@@ -851,7 +851,7 @@ function initPlayground() {
         'fontStyle': {
             'family': 'Arial, sans-serif',
             'weight': 'bold', // 전체 텍스트 볼드 처리
-            'size': 8 // 전체 텍스트 크기 조정
+            'size': 11 // 전체 텍스트 크기 조정
           }
         });
 
