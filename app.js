@@ -943,7 +943,7 @@ function initTerminal() {
             if (element) {
                 element.style.backgroundColor = '#1e1e1e';
                 element.style.color = '#f8f8f8';
-                element.style.padding = '40px';
+                element.style.padding = '10px';
                 element.style.fontFamily = 'monospace';
                 element.style.height = '100%';
                 element.style.overflowY = 'auto';
