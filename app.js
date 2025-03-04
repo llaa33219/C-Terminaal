@@ -771,6 +771,11 @@ function initPlayground() {
         Blockly.blockRendering.ConstantProvider.prototype.TAB_HEIGHT = 20; // 탭 높이 조정
         Blockly.blockRendering.ConstantProvider.prototype.TAB_RADIUS = 20; // 탭 모서리 둥글기
 
+        // 텍스트 관련 스타일 설정 - 볼드 처리 및 가독성 향상
+        Blockly.blockRendering.ConstantProvider.prototype.FIELD_TEXT_FONTWEIGHT = 'bold'; // 텍스트 볼드 처리
+        Blockly.blockRendering.ConstantProvider.prototype.FIELD_TEXT_FONTFAMILY = 'Arial, sans-serif'; // 폰트 변경
+        Blockly.blockRendering.ConstantProvider.prototype.FIELD_TEXT_FONTSIZE = 13; // 폰트 크기 약간 키움
+
         // 테두리 두께
         const BORDER_WIDTH = 4; // 테두리 두께 증가
 
@@ -778,6 +783,18 @@ function initPlayground() {
         class CustomRenderer extends Blockly.blockRendering.Renderer {
         constructor() {
             super();
+        }
+
+        // Constants 객체 확장
+        makeConstants_() {
+            const constants = super.makeConstants_();
+            // 텍스트 스타일 오버라이드
+            constants.FIELD_TEXT_FONTWEIGHT = 'bold';
+            constants.FIELD_TEXT_FONTFAMILY = 'Arial, sans-serif';
+            constants.FIELD_TEXT_FONTSIZE = 13;
+            constants.FIELD_BORDER_RECT_RADIUS = 20; // 텍스트 필드 주변 박스 모서리 둥글게
+            constants.FIELD_TEXT_BASELINE_CENTER = true; // 텍스트 수직 정렬 보정
+            return constants;
         }
 
         // 테두리 스타일 재정의
@@ -805,16 +822,22 @@ function initPlayground() {
             
             return pathObject;
         }
+        }
 
-        // 블록 연결 형태 강제 변경
-        makeNotch(constants) {
-            const notch = super.makeNotch(constants);
-            // 여기서 노치(블록 연결부) 모양을 보다 둥글게 수정할 수 있음
-            return notch;
+        // 커스텀 필드 렌더러 - 텍스트 스타일 변경을 위한 확장
+        class CustomFieldRenderer extends Blockly.blockRendering.Field {
+        constructor(constants, field, parentInput) {
+            super(constants, field, parentInput);
+        }
+
+        // 텍스트 렌더링 설정 오버라이드
+        getDisplayText() {
+            const text = super.getDisplayText();
+            return text;
         }
         }
 
-        // 커스텀 테마 생성 - 블록 색상을 보다 선명하게 조정
+        // 커스텀 테마 생성 - 블록 색상 및 텍스트 스타일 조정
         const customTheme = Blockly.Theme.defineTheme('simpleRounded', {
         'base': Blockly.Themes.Classic,
         'blockStyles': {
@@ -846,12 +869,65 @@ function initPlayground() {
             'flyoutForegroundColour': '#333',
             'flyoutOpacity': 0.9,
             'scrollbarColour': '#bbb',
-            'scrollbarOpacity': 0.5
+            'scrollbarOpacity': 0.5,
+            // 텍스트 관련 스타일 추가
+            'blockTextColour': '#000000', // 블록 텍스트 색상 검정으로
+            'selectedGlowColour': '#00c3ff', // 선택 시 효과 색상
+            'insertionMarkerColour': '#00c3ff', // 삽입 표시 색상
+            'fieldTextColour': '#000000', // 필드 텍스트 색상
+            'fieldBorderColour': 'rgba(0,0,0,0.1)' // 필드 테두리 색상
+        },
+        'fontStyle': {
+            'family': 'Arial, sans-serif',
+            'weight': 'bold', // 전체 텍스트 볼드 처리
+            'size': 13 // 전체 텍스트 크기 조정
         }
         });
 
+        // CSS 스타일을 직접 DOM에 주입
+        function injectCustomBlocklyStyles() {
+        // 기존 스타일 태그 찾기 또는 새로 생성
+        let styleElement = document.getElementById('blockly-custom-styles');
+        if (!styleElement) {
+            styleElement = document.createElement('style');
+            styleElement.id = 'blockly-custom-styles';
+            document.head.appendChild(styleElement);
+        }
+
+        // 블록 텍스트 스타일 정의
+        styleElement.textContent = `
+            .blocklyText {
+            font-family: Arial, sans-serif !important;
+            font-weight: bold !important;
+            font-size: 13px !important;
+            fill: #000000 !important;
+            }
+            .blocklyEditableText > text {
+            font-family: Arial, sans-serif !important;
+            font-weight: bold !important;
+            font-size: 13px !important;
+            fill: #000000 !important;
+            }
+            .blocklyHtmlInput {
+            font-family: Arial, sans-serif !important;
+            font-weight: bold !important;
+            font-size: 13px !important;
+            }
+            .blocklyFlyoutButton .blocklyText {
+            font-weight: bold !important;
+            }
+            /* 라벨의 대비를 높이기 위한 텍스트 그림자 추가 */
+            .blocklyText {
+            text-shadow: 0px 0px 2px rgba(255,255,255,0.7) !important;
+            }
+        `;
+        }
+
         // 커스텀 렌더러 등록
         Blockly.blockRendering.register('custom_renderer', CustomRenderer);
+
+        // DOM에 스타일 주입 실행 (Blockly 초기화 후 호출)
+        setTimeout(injectCustomBlocklyStyles, 200);
         
         // Blockly 초기화
         workspace = Blockly.inject('blockly-container', {
