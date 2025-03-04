@@ -1265,7 +1265,7 @@ Blockly.JavaScript['terminal_ascii_art'] = function(block) {
 };
 
 /**
- * 새로운 배열 생성 블록
+ * 새로운 배열 생성 블록 - 수정된 Mutator 구현
  */
 Blockly.Blocks['array_create'] = {
   init: function() {
@@ -1275,7 +1275,21 @@ Blockly.Blocks['array_create'] = {
     this.setColour(ARRAY_BLOCK_COLOR);
     this.setTooltip('빈 배열을 생성합니다.');
     this.setHelpUrl('');
-    this.setMutator(new Blockly.Mutator(['array_create_item']));
+    
+    // Blockly v9+ 호환 방식으로 Mutator 설정
+    this.jsonInit({
+      'mutator': {
+        'inputs': {
+          'ITEMS': {
+            'shadow': {
+              'type': 'math_number',
+              'fields': {'NUM': 0}
+            }
+          }
+        }
+      }
+    });
+    
     this.itemCount_ = 0;
   },
 
@@ -1357,18 +1371,20 @@ Blockly.Blocks['array_create'] = {
   }
 };
 
+// Mutator 대화상자에서 사용할 컨테이너 블록
 Blockly.Blocks['array_create_container'] = {
   init: function() {
     this.appendDummyInput()
         .appendField('배열 항목 추가');
     this.appendStatementInput('STACK');
     this.setColour(ARRAY_BLOCK_COLOR);
-    this.setTooltip('');
+    this.setTooltip('배열 항목을 추가합니다.');
     this.setHelpUrl('');
     this.contextMenu = false;
   }
 };
 
+// Mutator 대화상자에서 사용할 항목 블록
 Blockly.Blocks['array_create_item'] = {
   init: function() {
     this.appendDummyInput()
@@ -1376,22 +1392,67 @@ Blockly.Blocks['array_create_item'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(ARRAY_BLOCK_COLOR);
-    this.setTooltip('');
+    this.setTooltip('배열 항목입니다.');
     this.setHelpUrl('');
     this.contextMenu = false;
   }
 };
 
-Blockly.JavaScript['array_create'] = function(block) {
-  const elements = [];
-  for (let i = 0; i < block.itemCount_; i++) {
-    const value = Blockly.JavaScript.valueToCode(block, 'ADD' + i, Blockly.JavaScript.ORDER_COMMA) || 'null';
-    elements.push(value);
-  }
-  
-  const code = '[' + elements.join(', ') + ']';
-  return [code, Blockly.JavaScript.ORDER_ATOMIC];
-};
+/**
+ * 대체 구현: 배열 생성자 - Mutator 없이 간단한 구현
+ * (경고가 계속될 경우 이 방식으로 전환 가능)
+ */
+function createSimpleArrayBlock() {
+  Blockly.Blocks['array_create_simple'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField('배열 생성')
+          .appendField('항목 수')
+          .appendField(new Blockly.FieldNumber(3, 0, 10), 'ITEMS');
+      this.setOutput(true, 'Array');
+      this.setColour(ARRAY_BLOCK_COLOR);
+      this.setTooltip('지정된 수의 항목을 가진 배열을 생성합니다.');
+      this.setHelpUrl('');
+      this.itemCount_ = 3; // 기본 항목 수
+      this.updateShape_();
+
+      // 항목 수 변경 감지
+      this.setOnChange(function(changeEvent) {
+        if (changeEvent.type === Blockly.Events.BLOCK_CHANGE &&
+            changeEvent.element === 'field' &&
+            changeEvent.name === 'ITEMS') {
+          this.itemCount_ = parseInt(changeEvent.newValue);
+          this.updateShape_();
+        }
+      });
+    },
+
+    updateShape_: function() {
+      // 기존 항목 입력 제거
+      for (let i = 0; this.getInput('ITEM' + i); i++) {
+        this.removeInput('ITEM' + i);
+      }
+      
+      // 새 항목 입력 추가
+      for (let i = 0; i < this.itemCount_; i++) {
+        this.appendValueInput('ITEM' + i)
+            .setAlign(Blockly.ALIGN_RIGHT)
+            .appendField(i + '번 항목');
+      }
+    }
+  };
+
+  Blockly.JavaScript['array_create_simple'] = function(block) {
+    const elements = [];
+    for (let i = 0; i < block.itemCount_; i++) {
+      const value = Blockly.JavaScript.valueToCode(block, 'ITEM' + i, Blockly.JavaScript.ORDER_COMMA) || 'null';
+      elements.push(value);
+    }
+    
+    const code = '[' + elements.join(', ') + ']';
+    return [code, Blockly.JavaScript.ORDER_ATOMIC];
+  };
+}
 
 /**
  * 배열 항목 가져오기 블록
