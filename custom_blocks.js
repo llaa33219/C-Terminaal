@@ -1062,7 +1062,9 @@ function registerTerminalBlocks() {
             { kind: 'block', type: 'array_create' },
             { kind: 'block', type: 'array_get_item' },
             { kind: 'block', type: 'array_set_item' },
-            { kind: 'block', type: 'array_length' }
+            { kind: 'block', type: 'array_length' },
+            { kind: 'block', type: 'array_push' },     // 새로 추가
+            { kind: 'block', type: 'array_remove_at' } // 새로 추가
         ]
     };
     
@@ -1265,194 +1267,203 @@ Blockly.JavaScript['terminal_ascii_art'] = function(block) {
 };
 
 /**
- * 새로운 배열 생성 블록 - 수정된 Mutator 구현
+ * 단순화된 배열 생성 블록 - Mutator를 사용하지 않는 방식
  */
 Blockly.Blocks['array_create'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField('새 배열 생성');
+        .appendField('배열 생성')
+        .appendField('항목 수')
+        .appendField(new Blockly.FieldNumber(3, 0, 10), 'ITEMS');
     this.setOutput(true, 'Array');
     this.setColour(ARRAY_BLOCK_COLOR);
-    this.setTooltip('빈 배열을 생성합니다.');
+    this.setTooltip('지정된 수의 항목을 가진 배열을 생성합니다.');
     this.setHelpUrl('');
-    
-    // Blockly v9+ 호환 방식으로 Mutator 설정
-    this.jsonInit({
-      'mutator': {
-        'inputs': {
-          'ITEMS': {
-            'shadow': {
-              'type': 'math_number',
-              'fields': {'NUM': 0}
-            }
-          }
+    this.itemCount_ = 3; // 기본 항목 수
+    this.updateShape_();
+
+    // 항목 수 변경 감지
+    this.setOnChange(function(changeEvent) {
+      if (changeEvent.type === Blockly.Events.BLOCK_CHANGE &&
+          changeEvent.element === 'field' &&
+          changeEvent.name === 'ITEMS') {
+        const newValue = parseInt(changeEvent.newValue);
+        if (!isNaN(newValue) && newValue >= 0 && newValue <= 10) {
+          this.itemCount_ = newValue;
+          this.updateShape_();
         }
       }
     });
-    
-    this.itemCount_ = 0;
-  },
-
-  mutationToDom: function() {
-    const container = Blockly.utils.xml.createElement('mutation');
-    container.setAttribute('items', this.itemCount_);
-    return container;
-  },
-
-  domToMutation: function(xmlElement) {
-    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
-    this.updateShape_();
-  },
-
-  decompose: function(workspace) {
-    const containerBlock = workspace.newBlock('array_create_container');
-    containerBlock.initSvg();
-    
-    let connection = containerBlock.getInput('STACK').connection;
-    for (let i = 0; i < this.itemCount_; i++) {
-      const itemBlock = workspace.newBlock('array_create_item');
-      itemBlock.initSvg();
-      connection.connect(itemBlock.previousConnection);
-      connection = itemBlock.nextConnection;
-    }
-    
-    return containerBlock;
-  },
-
-  compose: function(containerBlock) {
-    let itemBlock = containerBlock.getInputTargetBlock('STACK');
-    
-    const connections = [];
-    while (itemBlock) {
-      connections.push(itemBlock.valueConnection_);
-      itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
-    }
-    
-    this.itemCount_ = connections.length;
-    this.updateShape_();
-    
-    for (let i = 0; i < this.itemCount_; i++) {
-      if (connections[i]) {
-        this.getInput('ADD' + i).connection.connect(connections[i]);
-      }
-    }
-  },
-
-  saveConnections: function(containerBlock) {
-    let itemBlock = containerBlock.getInputTargetBlock('STACK');
-    let i = 0;
-    while (itemBlock) {
-      const input = this.getInput('ADD' + i);
-      itemBlock.valueConnection_ = input && input.connection.targetConnection;
-      i++;
-      itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
-    }
   },
 
   updateShape_: function() {
-    if (this.itemCount_ && this.getInput('EMPTY')) {
-      this.removeInput('EMPTY');
-    } else if (!this.itemCount_ && !this.getInput('EMPTY')) {
-      this.appendDummyInput('EMPTY')
-          .appendField('빈 배열');
+    // 기존 항목 입력 제거
+    for (let i = 0; this.getInput('ITEM' + i); i++) {
+      this.removeInput('ITEM' + i);
     }
     
-    // 기존 입력 제거
-    for (let i = 0; this.getInput('ADD' + i); i++) {
-      this.removeInput('ADD' + i);
-    }
-    
-    // 새 입력 추가
+    // 새 항목 입력 추가
     for (let i = 0; i < this.itemCount_; i++) {
-      const input = this.appendValueInput('ADD' + i)
-                      .setAlign(Blockly.ALIGN_RIGHT)
-                      .appendField(i + '번 항목');
+      this.appendValueInput('ITEM' + i)
+          .setAlign(Blockly.ALIGN_RIGHT)
+          .appendField(i + '번 항목');
     }
   }
 };
 
-// Mutator 대화상자에서 사용할 컨테이너 블록
-Blockly.Blocks['array_create_container'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField('배열 항목 추가');
-    this.appendStatementInput('STACK');
-    this.setColour(ARRAY_BLOCK_COLOR);
-    this.setTooltip('배열 항목을 추가합니다.');
-    this.setHelpUrl('');
-    this.contextMenu = false;
+Blockly.JavaScript['array_create'] = function(block) {
+  const elements = [];
+  for (let i = 0; i < block.itemCount_; i++) {
+    const value = Blockly.JavaScript.valueToCode(block, 'ITEM' + i, Blockly.JavaScript.ORDER_COMMA) || 'null';
+    elements.push(value);
   }
-};
-
-// Mutator 대화상자에서 사용할 항목 블록
-Blockly.Blocks['array_create_item'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField('항목');
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(ARRAY_BLOCK_COLOR);
-    this.setTooltip('배열 항목입니다.');
-    this.setHelpUrl('');
-    this.contextMenu = false;
-  }
+  
+  const code = '[' + elements.join(', ') + ']';
+  return [code, Blockly.JavaScript.ORDER_ATOMIC];
 };
 
 /**
- * 대체 구현: 배열 생성자 - Mutator 없이 간단한 구현
- * (경고가 계속될 경우 이 방식으로 전환 가능)
+ * 배열 항목 가져오기 블록
  */
-function createSimpleArrayBlock() {
-  Blockly.Blocks['array_create_simple'] = {
-    init: function() {
-      this.appendDummyInput()
-          .appendField('배열 생성')
-          .appendField('항목 수')
-          .appendField(new Blockly.FieldNumber(3, 0, 10), 'ITEMS');
-      this.setOutput(true, 'Array');
-      this.setColour(ARRAY_BLOCK_COLOR);
-      this.setTooltip('지정된 수의 항목을 가진 배열을 생성합니다.');
-      this.setHelpUrl('');
-      this.itemCount_ = 3; // 기본 항목 수
-      this.updateShape_();
+Blockly.Blocks['array_get_item'] = {
+  init: function() {
+    this.appendValueInput('ARRAY')
+        .setCheck('Array')
+        .appendField('배열');
+    this.appendValueInput('INDEX')
+        .setCheck('Number')
+        .appendField('의 인덱스');
+    this.appendDummyInput()
+        .appendField('항목 가져오기');
+    this.setOutput(true, null);
+    this.setInputsInline(true);
+    this.setColour(ARRAY_BLOCK_COLOR);
+    this.setTooltip('배열에서 지정된 인덱스의 항목을 가져옵니다.');
+    this.setHelpUrl('');
+  }
+};
 
-      // 항목 수 변경 감지
-      this.setOnChange(function(changeEvent) {
-        if (changeEvent.type === Blockly.Events.BLOCK_CHANGE &&
-            changeEvent.element === 'field' &&
-            changeEvent.name === 'ITEMS') {
-          this.itemCount_ = parseInt(changeEvent.newValue);
-          this.updateShape_();
-        }
-      });
-    },
+Blockly.JavaScript['array_get_item'] = function(block) {
+  const array = Blockly.JavaScript.valueToCode(block, 'ARRAY', Blockly.JavaScript.ORDER_MEMBER) || '[]';
+  const index = Blockly.JavaScript.valueToCode(block, 'INDEX', Blockly.JavaScript.ORDER_MEMBER) || '0';
+  
+  const code = `${array}[${index}]`;
+  return [code, Blockly.JavaScript.ORDER_MEMBER];
+};
 
-    updateShape_: function() {
-      // 기존 항목 입력 제거
-      for (let i = 0; this.getInput('ITEM' + i); i++) {
-        this.removeInput('ITEM' + i);
-      }
-      
-      // 새 항목 입력 추가
-      for (let i = 0; i < this.itemCount_; i++) {
-        this.appendValueInput('ITEM' + i)
-            .setAlign(Blockly.ALIGN_RIGHT)
-            .appendField(i + '번 항목');
-      }
-    }
-  };
+/**
+ * 배열 항목 설정 블록
+ */
+Blockly.Blocks['array_set_item'] = {
+  init: function() {
+    this.appendValueInput('ARRAY')
+        .setCheck('Array')
+        .appendField('배열');
+    this.appendValueInput('INDEX')
+        .setCheck('Number')
+        .appendField('의 인덱스');
+    this.appendValueInput('ITEM')
+        .appendField('에 값');
+    this.appendDummyInput()
+        .appendField('저장');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(ARRAY_BLOCK_COLOR);
+    this.setTooltip('배열의 지정된 인덱스에 값을 저장합니다.');
+    this.setHelpUrl('');
+  }
+};
 
-  Blockly.JavaScript['array_create_simple'] = function(block) {
-    const elements = [];
-    for (let i = 0; i < block.itemCount_; i++) {
-      const value = Blockly.JavaScript.valueToCode(block, 'ITEM' + i, Blockly.JavaScript.ORDER_COMMA) || 'null';
-      elements.push(value);
-    }
-    
-    const code = '[' + elements.join(', ') + ']';
-    return [code, Blockly.JavaScript.ORDER_ATOMIC];
-  };
-}
+Blockly.JavaScript['array_set_item'] = function(block) {
+  const array = Blockly.JavaScript.valueToCode(block, 'ARRAY', Blockly.JavaScript.ORDER_MEMBER) || '[]';
+  const index = Blockly.JavaScript.valueToCode(block, 'INDEX', Blockly.JavaScript.ORDER_MEMBER) || '0';
+  const item = Blockly.JavaScript.valueToCode(block, 'ITEM', Blockly.JavaScript.ORDER_ASSIGNMENT) || 'null';
+  
+  return `${array}[${index}] = ${item};\n`;
+};
+
+/**
+ * 배열 길이 블록
+ */
+Blockly.Blocks['array_length'] = {
+  init: function() {
+    this.appendValueInput('ARRAY')
+        .setCheck('Array')
+        .appendField('배열');
+    this.appendDummyInput()
+        .appendField('의 길이');
+    this.setOutput(true, 'Number');
+    this.setInputsInline(true);
+    this.setColour(ARRAY_BLOCK_COLOR);
+    this.setTooltip('배열의 길이(항목 수)를 가져옵니다.');
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.JavaScript['array_length'] = function(block) {
+  const array = Blockly.JavaScript.valueToCode(block, 'ARRAY', Blockly.JavaScript.ORDER_MEMBER) || '[]';
+  
+  const code = `${array}.length`;
+  return [code, Blockly.JavaScript.ORDER_MEMBER];
+};
+
+/**
+ * 배열 추가 블록 - 배열 끝에 항목 추가하기
+ */
+Blockly.Blocks['array_push'] = {
+  init: function() {
+    this.appendValueInput('ARRAY')
+        .setCheck('Array')
+        .appendField('배열');
+    this.appendValueInput('ITEM')
+        .appendField('에 값');
+    this.appendDummyInput()
+        .appendField('추가');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(ARRAY_BLOCK_COLOR);
+    this.setTooltip('배열의 끝에 항목을 추가합니다.');
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.JavaScript['array_push'] = function(block) {
+  const array = Blockly.JavaScript.valueToCode(block, 'ARRAY', Blockly.JavaScript.ORDER_MEMBER) || '[]';
+  const item = Blockly.JavaScript.valueToCode(block, 'ITEM', Blockly.JavaScript.ORDER_NONE) || 'null';
+  
+  return `${array}.push(${item});\n`;
+};
+
+/**
+ * 배열 제거 블록 - 배열 특정 위치의 항목 제거
+ */
+Blockly.Blocks['array_remove_at'] = {
+  init: function() {
+    this.appendValueInput('ARRAY')
+        .setCheck('Array')
+        .appendField('배열');
+    this.appendValueInput('INDEX')
+        .setCheck('Number')
+        .appendField('의 인덱스');
+    this.appendDummyInput()
+        .appendField('위치 항목 제거');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(ARRAY_BLOCK_COLOR);
+    this.setTooltip('배열에서 지정된 인덱스의 항목을 제거합니다.');
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.JavaScript['array_remove_at'] = function(block) {
+  const array = Blockly.JavaScript.valueToCode(block, 'ARRAY', Blockly.JavaScript.ORDER_MEMBER) || '[]';
+  const index = Blockly.JavaScript.valueToCode(block, 'INDEX', Blockly.JavaScript.ORDER_NONE) || '0';
+  
+  return `${array}.splice(${index}, 1);\n`;
+};
 
 /**
  * 배열 항목 가져오기 블록
