@@ -2179,3 +2179,364 @@ async function listFilesFromR2(prefix = '') {
         return { objects: [], delimitedPrefixes: [] };
     }
 }
+
+// 기존 app.js 파일에 추가해야 하는 코드
+
+// 기존 DOM 로드 이벤트 리스너를 수정
+document.addEventListener('DOMContentLoaded', () => {
+    // 기존 초기화 코드는 유지하되, 인증 시스템을 통합
+    
+    // 네비게이션 핸들러 초기화
+    initNavigation();
+    
+    // 인증 시스템 초기화 (기존 checkLoginStatus 대신 사용)
+    authManager.init();
+    
+    // 모달 핸들러 초기화 (기존 코드)
+    initModals();
+    
+    // 프로젝트 관리자 초기화
+    projectManager.init();
+    
+    // 메인 페이지 초기화
+    initHomePage();
+    
+    // 인증 상태에 따른 UI 업데이트
+    if (authManager.isLoggedIn()) {
+        uiHandlers.updateUIForLoggedInUser();
+    } else {
+        uiHandlers.updateUIForLoggedOutUser();
+    }
+    
+    // 커뮤니티 페이지 이벤트 리스너
+    document.getElementById('nav-community').addEventListener('click', () => {
+        if (document.getElementById('community-section').style.display !== 'none') {
+            // 커뮤니티 게시물 로드
+            uiHandlers.loadCommunityPosts('hot');
+        }
+    });
+    
+    // 프로필 페이지 이벤트 리스너
+    document.getElementById('nav-profile').addEventListener('click', () => {
+        uiHandlers.loadUserProfile();
+    });
+    
+    // 이미 작성된 함수들과 연결
+    
+    // 1. 로그인/회원가입 함수 연결
+    document.getElementById('login-submit-btn').addEventListener('click', function() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        const result = authManager.login(email, password);
+        
+        if (result.success) {
+            uiHandlers.updateUIForLoggedInUser();
+            closeCurrentModal();
+            alert('로그인되었습니다.');
+        } else {
+            alert(result.message);
+        }
+    });
+    
+    document.getElementById('signup-submit-btn').addEventListener('click', function() {
+        const username = document.getElementById('signup-username').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+        const termsAgreed = document.getElementById('terms-agree').checked;
+        
+        // 비밀번호 일치 확인
+        if (password !== confirmPassword) {
+            alert('비밀번호가 일치하지 않습니다.');
+            return;
+        }
+        
+        // 약관 동의 확인
+        if (!termsAgreed) {
+            alert('이용약관에 동의해주세요.');
+            return;
+        }
+        
+        const result = authManager.register(username, email, password);
+        
+        if (result.success) {
+            uiHandlers.updateUIForLoggedInUser();
+            closeCurrentModal();
+            alert('회원가입이 완료되었습니다.');
+        } else {
+            alert(result.message);
+        }
+    });
+    
+    // 2. 로그아웃 함수 연결
+    document.getElementById('logout-btn').addEventListener('click', function() {
+        authManager.logout();
+        uiHandlers.updateUIForLoggedOutUser();
+        showSection('home-section');
+        document.querySelector('.user-dropdown').classList.add('hidden');
+    });
+    
+    // 3. 프로젝트 저장 버튼 연결
+    document.getElementById('save-btn').addEventListener('click', function() {
+        if (!window.workspace) {
+            alert('코드 편집기가 초기화되지 않았습니다.');
+            return;
+        }
+        
+        const blocks = Blockly.serialization.workspaces.save(workspace);
+        const result = projectManager.saveCurrentProject(blocks);
+        
+        if (result.success) {
+            document.getElementById('project-status').textContent = '저장됨';
+            alert('프로젝트가 저장되었습니다.');
+        } else {
+            alert(result.message);
+        }
+    });
+    
+    // 4. 프로젝트 제목 변경 연결
+    document.getElementById('project-title').addEventListener('change', function() {
+        const title = this.value;
+        const result = projectManager.updateTitle(title);
+        
+        if (result.success) {
+            document.getElementById('project-status').textContent = '변경됨';
+        }
+    });
+    
+    // 5. 공유 기능 연결
+    document.getElementById('share-btn').addEventListener('click', function() {
+        // 저장되지 않은 프로젝트라면 먼저 저장
+        if (document.getElementById('project-status').textContent !== '저장됨') {
+            document.getElementById('save-btn').click();
+        }
+        
+        const currentProject = projectManager.currentProject;
+        
+        // 공유 링크 생성
+        const shareLink = `https://c-terminal.pages.dev/projects/${currentProject.id}`;
+        document.getElementById('share-link').value = shareLink;
+        
+        // 공개 설정 체크박스 상태 설정
+        document.getElementById('public-project').checked = currentProject.isPublic;
+        
+        // 모달 열기
+        openModal('share-modal');
+    });
+    
+    // 6. 공유 링크 복사 기능
+    document.getElementById('copy-link-btn').addEventListener('click', function() {
+        const shareLink = document.getElementById('share-link');
+        shareLink.select();
+        document.execCommand('copy');
+        
+        const copyBtn = document.getElementById('copy-link-btn');
+        const originalHtml = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> 복사됨';
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalHtml;
+        }, 2000);
+    });
+    
+    // 7. 공개 설정 변경 연결
+    document.getElementById('public-project').addEventListener('change', function() {
+        const isPublic = this.checked;
+        projectManager.togglePublic(isPublic);
+    });
+    
+    // 8. 게시물 작성 기능 연결
+    document.getElementById('submit-post-btn').addEventListener('click', function() {
+        const title = document.getElementById('post-title').value;
+        const content = document.getElementById('post-content').value;
+        const attachProject = document.getElementById('attach-project').checked;
+        
+        // 프로젝트 첨부 확인
+        const projectId = attachProject ? projectManager.currentProject.id : null;
+        
+        const result = communityManager.createPost(title, content, projectId);
+        
+        if (result.success) {
+            closeCurrentModal();
+            
+            // 폼 초기화
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-content').value = '';
+            document.getElementById('attach-project').checked = false;
+            
+            // 게시물 목록 새로고침
+            uiHandlers.loadCommunityPosts('new');
+            
+            alert('게시물이 성공적으로 작성되었습니다.');
+        } else {
+            alert(result.message);
+        }
+    });
+    
+    // 9. 커뮤니티 탭 이벤트 리스너
+    document.querySelectorAll('.community-tabs .tab-btn').forEach(tab => {
+        tab.addEventListener('click', () => {
+            // 활성 탭 설정
+            document.querySelectorAll('.community-tabs .tab-btn').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // 선택한 탭에 따라 게시물 로드
+            const tabType = tab.dataset.tab;
+            uiHandlers.loadCommunityPosts(tabType);
+        });
+    });
+    
+    // 10. 탐색 페이지 필터링 및 정렬
+    document.getElementById('explore-search-btn').addEventListener('click', function() {
+        filterExploreProjects();
+    });
+    
+    document.getElementById('category-filter').addEventListener('change', function() {
+        filterExploreProjects();
+    });
+    
+    document.getElementById('sort-filter').addEventListener('change', function() {
+        filterExploreProjects();
+    });
+    
+    // 탐색 페이지 필터링 함수 오버라이드
+    window.filterExploreProjects = function() {
+        const searchTerm = document.getElementById('explore-search').value.toLowerCase();
+        const categoryFilter = document.getElementById('category-filter').value;
+        const sortFilter = document.getElementById('sort-filter').value;
+        
+        // 공개 프로젝트 가져오기
+        const result = projectManager.getPublicProjects(sortFilter);
+        
+        if (!result.success) {
+            alert('프로젝트를 불러오는 중 오류가 발생했습니다.');
+            return;
+        }
+        
+        let projects = result.projects;
+        
+        // 검색어 필터링
+        if (searchTerm) {
+            projects = projects.filter(project => 
+                project.title.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // 카테고리 필터링 (카테고리 정보가 있다면)
+        if (categoryFilter !== 'all' && projects[0].category) {
+            projects = projects.filter(project => project.category === categoryFilter);
+        }
+        
+        // 필터링된 프로젝트 표시
+        displayExploreProjects(projects);
+    };
+});
+
+// 기존 모달 열기 함수 수정 (display: flex로 변경)
+function openModal(modalId) {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
+    
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex'; // 'none'에서 'flex'로 변경
+    }
+}
+
+// 기존 모달 닫기 함수 수정
+function closeCurrentModal() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
+}
+
+// 현재 블록 작업 공간의 데이터를 가져오는 함수
+function getCurrentBlocklyData() {
+    if (!window.workspace) return null;
+    return Blockly.serialization.workspaces.save(workspace);
+}
+
+// 블록 작업 공간에 데이터 로드하는 함수
+function loadBlocklyData(data) {
+    if (!window.workspace || !data) return false;
+    
+    try {
+        // 기존 블록 지우기
+        workspace.clear();
+        
+        // 저장된 블록 불러오기
+        Blockly.serialization.workspaces.load(data, workspace);
+        return true;
+    } catch (error) {
+        console.error('블록 데이터 로드 오류:', error);
+        return false;
+    }
+}
+
+// 추가: 페이지 전환 시 프로젝트 로드 기능 강화
+function showSection(sectionId) {
+    console.log('섹션 전환:', sectionId);
+    
+    // 모든 섹션 숨기기
+    document.querySelectorAll('.section').forEach(section => {
+        if (section.style) {
+            section.style.display = 'none';
+        } else {
+            section.setAttribute('style', 'display: none;');
+        }
+    });
+    
+    // 선택한 섹션 표시
+    const selectedSection = document.getElementById(sectionId);
+    if (selectedSection) {
+        if (selectedSection.style) {
+            selectedSection.style.display = '';
+        } else {
+            selectedSection.setAttribute('style', 'display: block;');
+        }
+        
+        // 섹션 전환 시 추가 작업
+        if (sectionId === 'playground-section') {
+            // 플레이그라운드로 전환 시, 프로젝트 정보 표시
+            const currentProject = projectManager.currentProject;
+            if (currentProject) {
+                document.getElementById('project-title').value = currentProject.title;
+                document.getElementById('project-status').textContent = '로드됨';
+                
+                // Blockly 워크스페이스가 초기화되었는지 확인
+                if (window.workspace && currentProject.blocks) {
+                    // 저장된 블록 데이터 로드
+                    loadBlocklyData(currentProject.blocks);
+                }
+            }
+        } else if (sectionId === 'community-section') {
+            // 커뮤니티로 전환 시, 게시물 로드
+            uiHandlers.loadCommunityPosts('hot');
+        } else if (sectionId === 'profile-section') {
+            // 프로필로 전환 시, 사용자 정보 로드
+            uiHandlers.loadUserProfile();
+        } else if (sectionId === 'explore-section') {
+            // 탐색으로 전환 시, 공개 프로젝트 로드
+            const result = projectManager.getPublicProjects();
+            if (result.success) {
+                displayExploreProjects(result.projects);
+            }
+        }
+    } else {
+        console.error('섹션을 찾을 수 없음:', sectionId);
+    }
+    
+    // 네비게이션 링크 업데이트
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // 해당하는 네비게이션 링크 활성화
+    const navId = sectionId.replace('-section', '');
+    const navLink = document.getElementById(`nav-${navId}`);
+    if (navLink) {
+        navLink.classList.add('active');
+    }
+}

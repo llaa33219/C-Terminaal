@@ -66,6 +66,8 @@ C-Terminal/
 ├── styles.css         # 전체 스타일
 ├── app.js             # 메인 애플리케이션 로직
 ├── custom_blocks.js   # Blockly 커스텀 블록 정의
+├── _worker.js
+├── _headers
 └── img/               # 이미지 파일 디렉토리
     ├── logo.svg
     ├── default-avatar.svg
