@@ -202,47 +202,211 @@
             </div>
         </section>
 
-        <!-- 프로필 섹션 -->
+        <!-- 기존 프로필 섹션을 대체할 새로운 마이페이지 코드 -->
         <section id="profile-section" class="section" style="display:none;">
             <div class="profile-container">
+                <!-- 프로필 헤더 - GitHub 스타일 -->
                 <div class="profile-header">
-                    <div class="profile-avatar">
-                        <img src="img/default-avatar.svg" alt="사용자 아바타" id="profile-avatar-img" />
+                    <div class="profile-avatar-container">
+                        <img src="img/default-avatar.svg" alt="사용자 아바타" id="profile-avatar-img" class="profile-avatar-img" />
+                        <button id="edit-avatar-btn" class="edit-avatar-btn">
+                            <i class="fas fa-camera"></i>
+                        </button>
                     </div>
                     <div class="profile-info">
-                        <h2 id="profile-username">사용자 이름</h2>
-                        <p id="profile-bio">자기소개가 없습니다.</p>
-                        <div class="profile-stats">
-                            <div class="stat">
-                                <span class="stat-value" id="projects-count">0</span>
-                                <span class="stat-label">프로젝트</span>
+                        <div class="profile-name-container">
+                            <h1 id="profile-username">사용자 이름</h1>
+                            <span id="profile-handle" class="profile-handle">@username</span>
+                        </div>
+                        <p id="profile-bio" class="profile-bio">자기소개가 없습니다.</p>
+                        <div class="profile-details">
+                            <div class="profile-detail">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="profile-location">위치 정보 없음</span>
                             </div>
-                            <div class="stat">
-                                <span class="stat-value" id="followers-count">0</span>
-                                <span class="stat-label">팔로워</span>
+                            <div class="profile-detail">
+                                <i class="fas fa-envelope"></i>
+                                <span id="profile-email">이메일 정보 없음</span>
                             </div>
-                            <div class="stat">
-                                <span class="stat-value" id="following-count">0</span>
-                                <span class="stat-label">팔로잉</span>
+                            <div class="profile-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span id="profile-joined-date">가입일 정보 없음</span>
                             </div>
                         </div>
-                        <button id="edit-profile-btn" class="btn btn-outline">프로필 편집</button>
+                        <div class="profile-stats">
+                            <a href="#" class="stat">
+                                <i class="fas fa-code-branch"></i>
+                                <span class="stat-value" id="projects-count">0</span>
+                                <span class="stat-label">프로젝트</span>
+                            </a>
+                            <a href="#" class="stat">
+                                <i class="fas fa-users"></i>
+                                <span class="stat-value" id="followers-count">0</span>
+                                <span class="stat-label">팔로워</span>
+                            </a>
+                            <a href="#" class="stat">
+                                <i class="fas fa-user-friends"></i>
+                                <span class="stat-value" id="following-count">0</span>
+                                <span class="stat-label">팔로잉</span>
+                            </a>
+                            <a href="#" class="stat">
+                                <i class="fas fa-star"></i>
+                                <span class="stat-value" id="likes-count">0</span>
+                                <span class="stat-label">좋아요</span>
+                            </a>
+                        </div>
+                        <div class="profile-actions">
+                            <button id="edit-profile-btn" class="btn btn-outline">
+                                <i class="fas fa-edit"></i> 프로필 편집
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="profile-tabs">
-                    <button class="tab-btn active" data-tab="projects">프로젝트</button>
-                    <button class="tab-btn" data-tab="activity">활동</button>
+
+                <!-- 기여도 그래프 - GitHub 스타일 -->
+                <div class="contribution-section">
+                    <h3 class="section-title">활동 기록</h3>
+                    <div class="contribution-graph">
+                        <div class="contribution-calendar" id="contribution-calendar">
+                            <!-- 활동 그래프가 여기에 동적으로 생성됨 -->
+                        </div>
+                        <div class="contribution-legend">
+                            <span>적음</span>
+                            <ul class="contribution-legend-colors">
+                                <li class="legend-item" style="background-color: var(--contribution-color-0);"></li>
+                                <li class="legend-item" style="background-color: var(--contribution-color-1);"></li>
+                                <li class="legend-item" style="background-color: var(--contribution-color-2);"></li>
+                                <li class="legend-item" style="background-color: var(--contribution-color-3);"></li>
+                                <li class="legend-item" style="background-color: var(--contribution-color-4);"></li>
+                            </ul>
+                            <span>많음</span>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- 핀 고정 프로젝트 - GitHub 스타일 -->
+                <div class="pinned-projects-section">
+                    <div class="section-header">
+                        <h3 class="section-title">핀 고정 프로젝트</h3>
+                        <button id="customize-pins-btn" class="btn btn-small btn-outline">
+                            <i class="fas fa-thumbtack"></i> 수정
+                        </button>
+                    </div>
+                    <div class="pinned-projects-grid" id="pinned-projects">
+                        <!-- 핀 고정 프로젝트가 여기에 동적으로 생성됨 -->
+                        <div class="empty-pins-message">
+                            <i class="fas fa-thumbtack"></i>
+                            <p>아직 핀 고정된 프로젝트가 없습니다.</p>
+                            <button id="add-pins-btn" class="btn btn-outline">프로젝트 고정하기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 프로필 탭 영역 - GitHub 스타일 -->
+                <div class="profile-tabs">
+                    <button class="tab-btn active" data-tab="projects">
+                        <i class="fas fa-code-branch"></i> 프로젝트
+                    </button>
+                    <button class="tab-btn" data-tab="posts">
+                        <i class="fas fa-comment-alt"></i> 게시물
+                    </button>
+                    <button class="tab-btn" data-tab="activity">
+                        <i class="fas fa-history"></i> 활동
+                    </button>
+                    <button class="tab-btn" data-tab="followers">
+                        <i class="fas fa-users"></i> 팔로워/팔로잉
+                    </button>
+                </div>
+
+                <!-- 탭 컨텐츠 영역 -->
                 <div class="profile-content">
-                    <div id="projects-tab" class="tab-content">
+                    <!-- 프로젝트 탭 -->
+                    <div id="projects-tab" class="tab-content active">
+                        <div class="tab-header">
+                            <div class="search-filter">
+                                <input type="text" id="project-search" placeholder="프로젝트 검색..." class="search-input">
+                                <select id="project-type-filter" class="select-filter">
+                                    <option value="all">모든 유형</option>
+                                    <option value="public">공개</option>
+                                    <option value="private">비공개</option>
+                                </select>
+                                <select id="project-sort" class="select-filter">
+                                    <option value="updated">최근 수정순</option>
+                                    <option value="created">생성일순</option>
+                                    <option value="name">이름순</option>
+                                </select>
+                            </div>
+                            <button id="new-project-btn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> 새 프로젝트
+                            </button>
+                        </div>
                         <div class="projects-grid" id="user-projects">
                             <!-- 프로젝트들이 여기에 동적으로 로드됩니다 -->
                         </div>
                     </div>
-                    <div id="activity-tab" class="tab-content" style="display:none;">
-                        <div class="activity-feed" id="user-activity">
-                            <!-- 활동들이 여기에 동적으로 로드됩니다 -->
+
+                    <!-- 게시물 탭 -->
+                    <div id="posts-tab" class="tab-content">
+                        <div class="tab-header">
+                            <div class="search-filter">
+                                <input type="text" id="post-search" placeholder="게시물 검색..." class="search-input">
+                                <select id="post-sort" class="select-filter">
+                                    <option value="recent">최신순</option>
+                                    <option value="popular">인기순</option>
+                                </select>
+                            </div>
+                            <button id="new-user-post-btn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> 새 게시물
+                            </button>
                         </div>
+                        <div class="user-posts" id="user-posts">
+                            <!-- 사용자 게시물이 여기에 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 활동 탭 -->
+                    <div id="activity-tab" class="tab-content">
+                        <div class="activity-timeline" id="activity-timeline">
+                            <!-- 활동 타임라인이 여기에 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 팔로워/팔로잉 탭 -->
+                    <div id="followers-tab" class="tab-content">
+                        <div class="follow-container">
+                            <div class="followers-section">
+                                <h3 class="section-title">팔로워 <span id="followers-count-detail">0</span></h3>
+                                <div class="followers-list" id="followers-list">
+                                    <!-- 팔로워 목록이 여기에 동적으로 로드됩니다 -->
+                                </div>
+                            </div>
+                            <div class="following-section">
+                                <h3 class="section-title">팔로잉 <span id="following-count-detail">0</span></h3>
+                                <div class="following-list" id="following-list">
+                                    <!-- 팔로잉 목록이 여기에 동적으로 로드됩니다 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 핀 고정 프로젝트 수정 모달 -->
+            <div id="customize-pins-modal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>핀 고정 프로젝트 수정</h3>
+                        <button class="close-modal-btn">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>프로필에 표시할 프로젝트를 선택하세요 (최대 6개)</p>
+                        <div class="pin-projects-list" id="pin-projects-list">
+                            <!-- 사용자 프로젝트 목록이 여기에 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancel-pins-btn" class="btn btn-outline">취소</button>
+                        <button id="save-pins-btn" class="btn btn-primary">저장</button>
                     </div>
                 </div>
             </div>
@@ -260,8 +424,22 @@
                             <button id="upload-avatar-btn" class="btn btn-outline">이미지 업로드</button>
                             <input type="file" id="avatar-upload" accept="image/*" style="display:none;" />
                         </div>
-                        <input type="text" id="edit-username" placeholder="사용자 이름" class="full-width" />
-                        <textarea id="edit-bio" placeholder="자기소개" class="full-width"></textarea>
+                        <div class="form-group">
+                            <label for="edit-username">이름</label>
+                            <input type="text" id="edit-username" placeholder="이름" class="full-width" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-bio">자기소개</label>
+                            <textarea id="edit-bio" placeholder="자기소개" class="full-width"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-location">위치</label>
+                            <input type="text" id="edit-location" placeholder="위치 (예: 서울특별시)" class="full-width" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-website">웹사이트</label>
+                            <input type="text" id="edit-website" placeholder="웹사이트 URL" class="full-width" />
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button id="cancel-edit-btn" class="btn btn-outline">취소</button>
@@ -457,6 +635,7 @@
         </div>
     </div>
     <script src="auth-system.js"></script>
+    <script src="profile-manager.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
