@@ -72,3 +72,58 @@
       }
     });
   })();
+
+  // direct-profile.js 파일에 다음 코드를 추가해주세요 (기존 코드 유지)
+
+// 1초마다 프로필 링크 확인 및 이벤트 연결 시도
+setInterval(function() {
+    const profileLink = document.getElementById('nav-profile');
+    if (profileLink && !profileLink.hasAttribute('data-event-attached')) {
+      console.log('프로필 링크 발견 - 이벤트 연결 중');
+      
+      // 이벤트 추적을 위한 속성 추가
+      profileLink.setAttribute('data-event-attached', 'true');
+      
+      // 직접 클릭 이벤트 추가
+      profileLink.onclick = function(e) {
+        e.preventDefault();
+        console.log('프로필 링크 클릭됨! 프로필 페이지로 이동 시도');
+        
+        // 모든 섹션 숨기기
+        document.querySelectorAll('.section').forEach(function(section) {
+          section.style.display = 'none';
+        });
+        
+        // 프로필 섹션 표시
+        const profileSection = document.getElementById('profile-section');
+        if (profileSection) {
+          profileSection.style.display = 'block';
+          console.log('프로필 섹션이 표시됨');
+        } else {
+          console.error('profile-section 요소를 찾을 수 없음!');
+        }
+        
+        // 프로필 로드 함수 호출 시도
+        if (window.profileManager && typeof window.profileManager.loadProfile === 'function') {
+          window.profileManager.loadProfile();
+          console.log('프로필 데이터 로드 완료');
+        }
+        
+        // 드롭다운 메뉴 닫기
+        const dropdown = document.querySelector('.user-dropdown');
+        if (dropdown) {
+          dropdown.style.display = 'none';
+        }
+        
+        // 추가 디버깅 정보
+        console.log('현재 표시된 섹션:');
+        document.querySelectorAll('.section').forEach(function(section) {
+          console.log(`${section.id}: ${section.style.display}`);
+        });
+        
+        return false;
+      };
+      
+      console.log('프로필 링크에 이벤트가 성공적으로 연결됨');
+    }
+  }, 1000);
