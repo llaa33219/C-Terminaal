@@ -1,178 +1,181 @@
-// direct-profile.js 파일을 이 코드로 업데이트하세요
+// direct-profile.js 파일에 적용할 코드
 (function() {
-    // 페이지 로드 후 실행
+    // 페이지가 완전히 로드되었을 때 실행
     window.addEventListener('load', function() {
-      console.log('프로필 핸들러 로드됨');
+      console.log('직접 이벤트 바인딩 방식 적용 중...');
       
-      // 프로필 매니저 강제 초기화
-      if (window.profileManager && typeof window.profileManager.init === 'function') {
-        window.profileManager.init();
-        console.log('프로필 매니저 명시적 초기화 완료');
-      }
-      
-      // 프로필 페이지 표시 함수 - 개선된 버전
-      window.showProfilePage = function() {
-        console.log('프로필 페이지 표시 함수 호출됨');
-        
-        // 프로필 매니저 확인 및 초기화
-        if (window.profileManager) {
-          // 프로필 매니저가 아직 초기화되지 않았다면 초기화
-          if (typeof window.profileManager.init === 'function' && !window.profileManager._initialized) {
-            window.profileManager.init();
-            window.profileManager._initialized = true;
-            console.log('프로필 매니저 지연 초기화 완료');
-          }
-        } else {
-          console.warn('profileManager가 정의되지 않음');
-        }
+      // 1. 전역 함수 정의 - 가장 간단하게 접근할 수 있는 함수
+      window.openMyProfile = function() {
+        console.log('openMyProfile 함수 호출됨');
         
         // 모든 섹션 숨기기
-        document.querySelectorAll('.section').forEach(function(section) {
-          section.style.display = 'none';
-        });
+        var sections = document.querySelectorAll('.section');
+        for(var i = 0; i < sections.length; i++) {
+          sections[i].style.display = 'none';
+        }
         
         // 프로필 섹션 표시
-        const profileSection = document.getElementById('profile-section');
-        if (profileSection) {
+        var profileSection = document.getElementById('profile-section');
+        if(profileSection) {
           profileSection.style.display = 'block';
+          console.log('프로필 섹션 표시됨');
           
-          // 프로필 데이터 로드
-          try {
-            if (window.profileManager && typeof window.profileManager.loadProfile === 'function') {
-              window.profileManager.loadProfile();
-              console.log('프로필 데이터 로드됨');
-            }
-          } catch(err) {
-            console.error('프로필 데이터 로드 실패:', err);
+          // 프로필 데이터 로드 시도
+          if(window.profileManager && typeof profileManager.loadProfile === 'function') {
+            profileManager.loadProfile();
+            console.log('프로필 데이터 로드됨');
           }
-          
-          console.log('프로필 섹션 표시 성공');
-        } else {
-          console.error('profile-section을 찾을 수 없음!');
         }
         
-        // 드롭다운 닫기
-        const dropdown = document.querySelector('.user-dropdown');
-        if (dropdown) dropdown.style.display = 'none';
+        // 드롭다운 메뉴 닫기
+        var dropdown = document.querySelector('.user-dropdown');
+        if(dropdown) dropdown.style.display = 'none';
+        
+        return false; // 이벤트 전파 방지
       };
       
-      // showSection 함수 오버라이드 (기존 함수 백업)
-      if (typeof window.originalShowSection === 'undefined' && typeof window.showSection === 'function') {
-        window.originalShowSection = window.showSection;
-        
-        // 오버라이드된 버전
-        window.showSection = function(sectionId) {
-          console.log('오버라이드된 showSection 호출:', sectionId);
-          
-          // profile-section인 경우 특별 처리
-          if (sectionId === 'profile-section') {
-            window.showProfilePage();
-            return;
-          }
-          
-          // 다른 섹션은 원래 함수로 처리
-          window.originalShowSection(sectionId);
-        };
-        
-        console.log('showSection 함수 성공적으로 오버라이드됨');
-      }
+      // 2. 가장 직접적인 방법으로 이벤트 설정
+      applyDirectEventBinding();
       
-      // 테스트 버튼 추가 (작동하는 버튼)
-      addTestButton();
+      // 3. 테스트 버튼 추가
+      addDirectTestButton();
       
-      // 프로필 링크 이벤트 설정 (지연 설정)
-      setTimeout(setupProfileLink, 500);
-      
-      // 사용자 드롭다운 설정
-      setupUserDropdown();
+      // 4. 페이지 전환 함수 오버라이드
+      overrideShowSection();
     });
     
-    // 프로필 링크 이벤트 설정
-    function setupProfileLink() {
-      const profileLink = document.getElementById('nav-profile');
-      if (!profileLink) {
-        console.error('nav-profile 요소를 찾을 수 없음');
-        return;
+    // 직접 이벤트 바인딩 적용 함수
+    function applyDirectEventBinding() {
+      console.log('직접 이벤트 바인딩 적용 시작');
+      
+      // 1. 프로필 링크에 직접 onclick 속성 설정
+      var profileLinks = document.querySelectorAll('a#nav-profile');
+      for(var i = 0; i < profileLinks.length; i++) {
+        var link = profileLinks[i];
+        
+        // HTML 속성으로 직접 설정 (가장 강력한 방법)
+        link.setAttribute('onclick', 'return openMyProfile();');
+        
+        // href 속성도 변경
+        link.setAttribute('href', 'javascript:openMyProfile();');
+        
+        console.log('프로필 링크에 직접 속성 설정 완료:', link);
       }
       
-      console.log('프로필 링크 발견, 이벤트 직접 설정');
-      
-      // onclick 직접 설정 (가장 강력한 방법)
-      profileLink.onclick = function(e) {
-        e.preventDefault();
-        console.log('프로필 링크 클릭됨');
-        window.showProfilePage();
-        return false;
-      };
-      
-      // href 속성 변경
-      profileLink.href = "javascript:window.showProfilePage(); return false;";
-      
-      console.log('프로필 링크 이벤트 설정 완료');
-    }
-    
-    // 드롭다운 메뉴 설정
-    function setupUserDropdown() {
-      const userAvatar = document.getElementById('user-avatar');
-      if (!userAvatar) return;
-      
-      const dropdown = document.querySelector('.user-dropdown');
-      if (!dropdown) return;
-      
-      // 아바타 클릭 처리
-      userAvatar.onclick = function(e) {
-        e.preventDefault();
-        console.log('아바타 클릭됨');
+      // 2. 사용자 아바타에 클릭 이벤트 직접 설정
+      var avatar = document.getElementById('user-avatar');
+      if(avatar) {
+        avatar.setAttribute('onclick', 'toggleUserDropdown(); return false;');
+        console.log('아바타에 직접 onclick 속성 설정 완료');
         
-        if (dropdown.style.display === 'none' || !dropdown.style.display) {
-          dropdown.style.display = 'block';
+        // 전역 함수 정의 - 드롭다운 토글
+        window.toggleUserDropdown = function() {
+          var dropdown = document.querySelector('.user-dropdown');
+          if(!dropdown) return false;
           
-          // 드롭다운 표시 후 곧바로 링크 설정
-          setupDropdownLinks(dropdown);
-        } else {
-          dropdown.style.display = 'none';
-        }
-        
-        return false;
-      };
-    }
-    
-    // 드롭다운 내 링크 설정
-    function setupDropdownLinks(dropdown) {
-      // 모든 링크 찾기
-      const links = dropdown.querySelectorAll('a');
+          if(dropdown.style.display === 'block') {
+            dropdown.style.display = 'none';
+          } else {
+            dropdown.style.display = 'block';
+            
+            // 드롭다운 내의 프로필 링크에도 직접 이벤트 설정
+            var dropdownProfileLinks = dropdown.querySelectorAll('a');
+            for(var i = 0; i < dropdownProfileLinks.length; i++) {
+              var link = dropdownProfileLinks[i];
+              if(link.id === 'nav-profile' || link.textContent.trim() === '내 프로필') {
+                link.setAttribute('onclick', 'return openMyProfile();');
+                link.setAttribute('href', 'javascript:openMyProfile();');
+                console.log('드롭다운 내 프로필 링크에 직접 속성 설정 완료:', link);
+              }
+            }
+          }
+          
+          return false;
+        };
+      }
       
-      links.forEach(function(link) {
-        // 프로필 링크 찾기
-        if (link.id === 'nav-profile' || link.textContent.trim() === '내 프로필') {
-          console.log('드롭다운 내 프로필 링크 설정');
-          
-          // 직접 onclick 설정 및 href 변경 (가장 강력한 방법)
-          link.onclick = function(e) {
-            e.preventDefault();
-            console.log('드롭다운 내 프로필 링크 클릭됨');
-            window.showProfilePage();
-            return false;
-          };
-          
-          link.href = "javascript:window.showProfilePage(); return false;";
+      // 3. HTML 문서에 직접 인라인 스크립트 삽입
+      var scriptElement = document.createElement('script');
+      scriptElement.innerHTML = `
+        // 인라인 스크립트로 정의된 함수
+        function directOpenProfile() {
+          console.log('인라인 스크립트에서 정의된 함수 호출됨');
+          return openMyProfile();
         }
-      });
+      `;
+      document.body.appendChild(scriptElement);
+      
+      console.log('직접 이벤트 바인딩 적용 완료');
     }
     
     // 테스트 버튼 추가
-    function addTestButton() {
-      if (document.getElementById('profile-test-btn')) return;
+    function addDirectTestButton() {
+      // 이미 존재하는지 확인
+      if(document.getElementById('direct-profile-btn')) return;
       
-      const btn = document.createElement('button');
-      btn.id = 'profile-test-btn';
-      btn.innerText = '마이페이지 열기';
+      // 버튼 생성
+      var btn = document.createElement('button');
+      btn.id = 'direct-profile-btn';
+      btn.innerHTML = '직접 마이페이지 열기';
       btn.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999; padding: 10px; background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer;';
       
-      btn.onclick = function() {
-        window.showProfilePage();
-      };
+      // onclick 속성 직접 설정
+      btn.setAttribute('onclick', 'openMyProfile(); return false;');
       
       document.body.appendChild(btn);
+      console.log('직접 이벤트가 설정된 테스트 버튼 추가됨');
     }
+    
+    // showSection 함수 오버라이드
+    function overrideShowSection() {
+      if(typeof window.showSection === 'function') {
+        console.log('showSection 함수 오버라이드 시도');
+        
+        // 원본 함수 백업
+        window.originalShowSection = window.showSection;
+        
+        // 새 버전으로 교체
+        window.showSection = function(sectionId) {
+          console.log('오버라이드된 showSection 호출:', sectionId);
+          
+          // 프로필 섹션인 경우 특별 처리
+          if(sectionId === 'profile-section') {
+            return openMyProfile();
+          }
+          
+          // 그 외의 경우 원본 함수 호출
+          return window.originalShowSection(sectionId);
+        };
+        
+        console.log('showSection 함수 오버라이드 완료');
+      }
+    }
+    
+    // 주기적으로 이벤트 바인딩 확인 및 재적용
+    setInterval(function() {
+      // 프로필 링크 확인
+      var profileLinks = document.querySelectorAll('a#nav-profile');
+      for(var i = 0; i < profileLinks.length; i++) {
+        var link = profileLinks[i];
+        if(!link.getAttribute('onclick') || link.getAttribute('onclick').indexOf('openMyProfile') === -1) {
+          console.log('프로필 링크의 이벤트가 사라짐, 재설정 중...');
+          link.setAttribute('onclick', 'return openMyProfile();');
+          link.setAttribute('href', 'javascript:openMyProfile();');
+        }
+      }
+      
+      // 드롭다운 메뉴 내의 링크도 확인
+      var dropdown = document.querySelector('.user-dropdown');
+      if(dropdown && dropdown.style.display === 'block') {
+        var dropdownLinks = dropdown.querySelectorAll('a');
+        for(var i = 0; i < dropdownLinks.length; i++) {
+          var link = dropdownLinks[i];
+          if((link.id === 'nav-profile' || link.textContent.trim() === '내 프로필') && 
+             (!link.getAttribute('onclick') || link.getAttribute('onclick').indexOf('openMyProfile') === -1)) {
+            link.setAttribute('onclick', 'return openMyProfile();');
+            link.setAttribute('href', 'javascript:openMyProfile();');
+          }
+        }
+      }
+    }, 2000);
   })();
