@@ -952,3 +952,68 @@ const profileManager = {
       }
     });
   });
+
+
+  // profile-manager.js 파일 맨 마지막에 추가할 코드
+
+// 전역 초기화 상태 플래그 추가
+let profileManagerInitialized = false;
+
+// 프로필 매니저 init 함수 확장 - 초기화 상태 플래그 설정
+const originalInit = profileManager.init;
+profileManager.init = function() {
+  originalInit.apply(this, arguments);
+  profileManagerInitialized = true;
+  console.log('프로필 매니저 초기화 완료');
+};
+
+// showSection 함수 확장 - profile-section에 대한 처리 개선
+const originalShowSection = window.showSection;
+window.showSection = function(sectionId) {
+  // 기본 섹션 전환 수행
+  originalShowSection(sectionId);
+  
+  // 프로필 섹션으로 전환 시 특별 처리
+  if (sectionId === 'profile-section') {
+    if (window.profileManager) {
+      // 아직 초기화되지 않았다면 초기화
+      if (!profileManagerInitialized) {
+        profileManager.init();
+      }
+      
+      // 프로필 로드
+      profileManager.loadProfile();
+    }
+  }
+};
+
+// 이미 DOMContentLoaded 이벤트가 발생했는지 확인
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  // 프로필 매니저 초기화
+  if (!profileManagerInitialized) {
+    profileManager.init();
+  }
+} else {
+  // 페이지 로드 완료 후 실행
+  document.addEventListener('DOMContentLoaded', function() {
+    // 프로필 매니저 초기화
+    if (!profileManagerInitialized) {
+      profileManager.init();
+    }
+  });
+}
+
+// 프로필 링크 이벤트 통합 및 재설정
+document.addEventListener('DOMContentLoaded', function() {
+  const profileNavLink = document.getElementById('nav-profile');
+  if (profileNavLink) {
+    // 기존 이벤트 리스너 제거 및 새 이벤트 리스너 등록
+    profileNavLink.outerHTML = profileNavLink.outerHTML;
+    
+    // 새로 생성된 요소 다시 선택
+    document.getElementById('nav-profile').addEventListener('click', function(e) {
+      e.preventDefault();
+      window.showSection('profile-section');
+    });
+  }
+});
