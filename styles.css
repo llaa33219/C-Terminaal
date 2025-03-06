@@ -261,6 +261,7 @@ img {
     box-shadow: var(--shadow-md);
     margin-top: var(--spacing-sm);
     z-index: 10;
+    display: block;
 }
 
 .user-dropdown a {
