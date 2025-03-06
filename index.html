@@ -638,19 +638,54 @@
     <script src="profile-manager.js"></script>
     <script src="app.js"></script>
     <script>
-        // 프로필 페이지 로딩 문제 긴급 수정 스크립트
+        // 즉시 실행 함수로 프로필 기능 초기화 문제 해결
         (function() {
-          // 프로필 네비게이션 링크 직접 처리
-          const navProfileLink = document.getElementById('nav-profile');
-          if (navProfileLink) {
-            // 기존 이벤트 리스너 완전히 제거
-            const newLink = navProfileLink.cloneNode(true);
-            if (navProfileLink.parentNode) {
-              navProfileLink.parentNode.replaceChild(newLink, navProfileLink);
+          console.log("프로필 초기화 스크립트 실행");
+          
+          // 전역 변수에 강제 함수 정의
+          window.loadUserProfile = function() {
+            console.log("프로필 로드 호출됨");
+            
+            // 로그인 상태 확인
+            if (!window.authManager || !window.authManager.isLoggedIn()) {
+              window.showSection('home-section');
+              alert('프로필을 보려면 먼저 로그인하세요.');
+              return;
             }
             
-            // 새 이벤트 리스너 추가 - 강제 초기화 방식
-            newLink.addEventListener('click', function(e) {
+            try {
+              // 명시적으로 profileManager 초기화
+              if (window.profileManager && typeof window.profileManager.init === 'function') {
+                window.profileManager.init();
+              }
+              
+              // 명시적으로 프로필 로드
+              if (window.profileManager && typeof window.profileManager.loadProfile === 'function') {
+                window.profileManager.loadProfile();
+              } else {
+                console.error("profileManager.loadProfile 함수를 찾을 수 없음");
+              }
+            } catch (error) {
+              console.error("프로필 로드 중 오류 발생:", error);
+            }
+          };
+          
+          // 페이지 로드 완료 시점에 nav-profile 클릭 이벤트를 완전히 재정의
+          function setupProfileNavigation() {
+            // 기존 nav-profile 요소 참조
+            const navProfile = document.getElementById('nav-profile');
+            if (!navProfile) {
+              console.error("nav-profile 요소를 찾을 수 없음");
+              return;
+            }
+            
+            // 기존 이벤트 리스너를 제거하기 위해 요소 복제
+            const newNavProfile = navProfile.cloneNode(true);
+            navProfile.parentNode.replaceChild(newNavProfile, navProfile);
+            
+            // 새 이벤트 리스너 추가
+            newNavProfile.addEventListener('click', function(e) {
+              console.log("프로필 링크 클릭됨");
               e.preventDefault();
               
               // 모든 섹션 숨기기
@@ -658,38 +693,30 @@
                 section.style.display = 'none';
               });
               
-              // 프로필 섹션 표시
+              // 프로필 섹션만 표시
               const profileSection = document.getElementById('profile-section');
               if (profileSection) {
                 profileSection.style.display = 'block';
-              }
-              
-              // 강제로 프로필 매니저 초기화 및 로드
-              if (window.profileManager) {
-                // 초기화
-                if (typeof profileManager.init === 'function') {
-                  profileManager.init();
-                }
-                
-                // 프로필 로드
-                if (typeof profileManager.loadProfile === 'function') {
-                  profileManager.loadProfile();
-                }
-              } else if (window.loadUserProfile) {
-                // 대체 함수 사용
-                window.loadUserProfile();
-              } else {
-                console.error('프로필 기능을 찾을 수 없습니다');
               }
               
               // 네비게이션 링크 상태 업데이트
               document.querySelectorAll('.nav-links a').forEach(link => {
                 link.classList.remove('active');
               });
-              newLink.classList.add('active');
+              newNavProfile.classList.add('active');
+              
+              // 강제로 프로필 로드 호출
+              window.loadUserProfile();
             });
             
-            console.log('프로필 네비게이션 이벤트 재설정 완료');
+            console.log("프로필 네비게이션 설정 완료");
+          }
+          
+          // 페이지 로드 완료 후 초기화 실행
+          if (document.readyState === 'complete') {
+            setupProfileNavigation();
+          } else {
+            window.addEventListener('load', setupProfileNavigation);
           }
         })();
         </script>
