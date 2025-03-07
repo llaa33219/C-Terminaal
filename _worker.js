@@ -64,10 +64,9 @@ async function handleApiRequest(request, env) {
       });
     }
 
-    // 인증 확인 (간단한 API 키 확인)
-    // 실제 환경에서는 더 강력한 토큰 기반 인증으로 대체해야 함
+    // 인증 확인 (간단한 API 키 확인) - 일시적으로 비활성화
     const apiKey = request.headers.get("X-Custom-Auth");
-    if (path.startsWith("community/") && path !== "community/posts/list") {
+    if (false && path.startsWith("community/") && path !== "community/posts/list") {
       // GET 방식의 읽기 요청을 제외한 모든 커뮤니티 요청은 인증 필요
       if (request.method !== "GET" && apiKey !== env.API_KEY) {
         return new Response("Unauthorized", { 
