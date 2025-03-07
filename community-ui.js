@@ -336,30 +336,65 @@ const communityUI = {
       }
     },
     
-    // 게시물 상세 보기
+    // Modified viewPostDetail function with better error handling
+    // Replace this in community-ui.js
+
     viewPostDetail: async function(postId, focusComments = false) {
-      try {
-        // 로딩 상태 표시
+        try {
+        // Show loading state
         this.showLoadingState();
         
-        // 게시물 데이터 로드
+        // Load post data
         const result = await communityManager.getPost(postId);
         
         if (!result.success) {
-          this.showError(result.message);
-          return;
+            // Handle error gracefully - show error message and allow retry
+            const errorMsg = result.message || '게시물을 불러오는 중 오류가 발생했습니다.';
+            
+            this.hideLoadingState();
+            
+            // Create a simple error dialog
+            const dialogHtml = `
+            <div id="error-dialog" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); 
+                background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); 
+                z-index:1000; max-width:90%; width:400px; text-align:center;">
+                <h3 style="margin-bottom:15px; color:#dc3545;">오류 발생</h3>
+                <p style="margin-bottom:20px;">${errorMsg}</p>
+                <div style="display:flex; justify-content:center; gap:10px;">
+                <button id="retry-post-btn" class="btn btn-primary">다시 시도</button>
+                <button id="cancel-post-btn" class="btn btn-outline">취소</button>
+                </div>
+            </div>
+            `;
+            
+            // Add to document
+            const dialogContainer = document.createElement('div');
+            dialogContainer.innerHTML = dialogHtml;
+            document.body.appendChild(dialogContainer);
+            
+            // Add event listeners
+            document.getElementById('retry-post-btn').addEventListener('click', () => {
+            document.body.removeChild(dialogContainer);
+            this.viewPostDetail(postId, focusComments);
+            });
+            
+            document.getElementById('cancel-post-btn').addEventListener('click', () => {
+            document.body.removeChild(dialogContainer);
+            });
+            
+            return;
         }
         
         const post = result.post;
         
-        // 상세 보기 모달 생성 또는 업데이트
+        // Create or update the modal
         this.openPostDetailModal(post, focusComments);
-      } catch (error) {
+        } catch (error) {
         console.error('게시물 상세 로드 오류:', error);
         this.showError('게시물을 불러오는 중 오류가 발생했습니다.');
-      } finally {
+        } finally {
         this.hideLoadingState();
-      }
+        }
     },
     
     // 게시물 상세 모달 열기

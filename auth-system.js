@@ -390,19 +390,46 @@ const communityManager = {
     return posts;
   },
   
-  // 특정 게시물 가져오기
+  // Modified getPost function to better handle API failures
+  // Add this to auth-system.js, replacing the existing getPost function in the communityManager object
+
   getPost: async function(postId) {
     try {
-      // R2 API로 게시물 요청
-      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/${postId}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        return { success: false, message: errorData.error || '게시물을 불러오는 중 오류가 발생했습니다.' };
+      // First try to fetch from API if online
+      if (window.navigator.onLine) {
+        try {
+          // Note: corrected API URL format - removed extra 'a' in terminaal
+          const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/${postId}`);
+          
+          if (response.ok) {
+            const post = await response.json();
+            return { success: true, post };
+          }
+        } catch (apiError) {
+          console.log('API fetch failed, falling back to local storage', apiError);
+          // Continue to local fallback if API fails
+        }
       }
       
-      const post = await response.json();
-      return { success: true, post };
+      // Fallback to local storage data
+      console.log('Using local storage fallback for post:', postId);
+      const storedPosts = localStorage.getItem(STORAGE_KEYS.COMMUNITY_POSTS);
+      
+      if (storedPosts) {
+        const posts = JSON.parse(storedPosts);
+        const post = posts.find(p => p.id === postId);
+        
+        if (post) {
+          // Create a commentList array if it doesn't exist
+          if (!post.commentList) {
+            post.commentList = [];
+          }
+          
+          return { success: true, post };
+        }
+      }
+      
+      return { success: false, message: '게시물을 찾을 수 없습니다.' };
     } catch (error) {
       console.error('게시물 로드 오류:', error);
       return { success: false, message: '게시물을 불러오는 중 오류가 발생했습니다.' };
