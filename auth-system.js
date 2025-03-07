@@ -247,186 +247,354 @@ const securityUtils = {
     }
   };
   
-  // 커뮤니티 관리 모듈
-  const communityManager = {
-    // 스토리지 키
-    STORAGE_KEY: 'c-terminal-community-posts',
-    
-    // 게시물 작성
-    createPost: function(title, content, projectId = null) {
-      // 로그인 확인
-      if (!authManager.isLoggedIn()) {
-        return { success: false, message: '게시물을 작성하려면 로그인이 필요합니다.' };
-      }
-      
-      // 입력값 검증
-      if (!title || title.trim() === '') {
-        return { success: false, message: '제목을 입력하세요.' };
-      }
-      
-      if (!content || content.trim() === '') {
-        return { success: false, message: '내용을 입력하세요.' };
-      }
-      
-      try {
-        // 현재 사용자 정보
-        const currentUser = authManager.getCurrentUser();
-        
-        // 게시물 목록 가져오기
-        let posts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-        
-        // 새 게시물 생성
-        const newPost = {
-          id: 'post_' + Date.now(),
-          title: securityUtils.escapeHTML(title),
-          content: securityUtils.escapeHTML(content),
-          author: {
-            id: currentUser.id,
-            username: currentUser.username,
-            avatar: currentUser.avatar
-          },
-          date: new Date(),
-          likes: 0,
-          comments: [],
-          projectId: projectId,
-          likedBy: [] // 좋아요 중복 방지를 위한 사용자 ID 저장
-        };
-        
-        // 게시물 목록에 추가
-        posts.push(newPost);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(posts));
-        
-        return { success: true, post: newPost };
-      } catch (error) {
-        console.error('게시물 작성 오류:', error);
-        return { success: false, message: '게시물 작성 중 오류가 발생했습니다.' };
-      }
-    },
-    
-    // 게시물 목록 가져오기
-    getPosts: function(sortType = 'new') {
-      try {
-        // 게시물 목록 가져오기
-        let posts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-        
-        // 정렬
-        switch (sortType) {
-          case 'hot': // 인기순 (좋아요 수)
-            posts.sort((a, b) => b.likes - a.likes);
-            break;
-          case 'new': // 최신순
-            posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            break;
-          case 'top': // 화제순 (댓글 수)
-            posts.sort((a, b) => (b.comments?.length || 0) - (a.comments?.length || 0));
-            break;
-        }
-        
-        return { success: true, posts };
-      } catch (error) {
-        console.error('게시물 목록 로드 오류:', error);
-        return { success: false, message: '게시물 목록을 불러오는 중 오류가 발생했습니다.' };
-      }
-    },
-    
-    // 게시물 좋아요
-    likePost: function(postId) {
-      // 로그인 확인
-      if (!authManager.isLoggedIn()) {
-        return { success: false, message: '좋아요를 남기려면 로그인이 필요합니다.' };
-      }
-      
-      try {
-        // 현재 사용자 정보
-        const currentUser = authManager.getCurrentUser();
-        
-        // 게시물 목록 가져오기
-        let posts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-        
-        // 게시물 찾기
-        const postIndex = posts.findIndex(p => p.id === postId);
-        
-        if (postIndex === -1) {
-          return { success: false, message: '게시물을 찾을 수 없습니다.' };
-        }
-        
-        // 이미 좋아요 했는지 확인
-        const post = posts[postIndex];
-        const likedBy = post.likedBy || [];
-        
-        if (likedBy.includes(currentUser.id)) {
-          return { success: false, message: '이미 좋아요한 게시물입니다.' };
-        }
-        
-        // 좋아요 수 증가 및 사용자 ID 추가
-        post.likes = (post.likes || 0) + 1;
-        post.likedBy = [...likedBy, currentUser.id];
-        
-        // 게시물 업데이트
-        posts[postIndex] = post;
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(posts));
-        
-        return { success: true, post };
-      } catch (error) {
-        console.error('게시물 좋아요 오류:', error);
-        return { success: false, message: '좋아요 처리 중 오류가 발생했습니다.' };
-      }
-    },
-    
-    // 댓글 작성
-    addComment: function(postId, content) {
-      // 로그인 확인
-      if (!authManager.isLoggedIn()) {
-        return { success: false, message: '댓글을 작성하려면 로그인이 필요합니다.' };
-      }
-      
-      // 입력값 검증
-      if (!content || content.trim() === '') {
-        return { success: false, message: '댓글 내용을 입력하세요.' };
-      }
-      
-      try {
-        // 현재 사용자 정보
-        const currentUser = authManager.getCurrentUser();
-        
-        // 게시물 목록 가져오기
-        let posts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-        
-        // 게시물 찾기
-        const postIndex = posts.findIndex(p => p.id === postId);
-        
-        if (postIndex === -1) {
-          return { success: false, message: '게시물을 찾을 수 없습니다.' };
-        }
-        
-        // 새 댓글 생성
-        const newComment = {
-          id: 'comment_' + Date.now(),
-          content: securityUtils.escapeHTML(content),
-          author: {
-            id: currentUser.id,
-            username: currentUser.username,
-            avatar: currentUser.avatar
-          },
-          date: new Date()
-        };
-        
-        // 댓글 추가
-        const post = posts[postIndex];
-        post.comments = post.comments || [];
-        post.comments.push(newComment);
-        
-        // 게시물 업데이트
-        posts[postIndex] = post;
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(posts));
-        
-        return { success: true, comment: newComment };
-      } catch (error) {
-        console.error('댓글 작성 오류:', error);
-        return { success: false, message: '댓글 작성 중 오류가 발생했습니다.' };
-      }
+  // 커뮤니티 관리 모듈 - 업그레이드 버전 (R2 버킷 연동)
+const communityManager = {
+  // R2 버킷 API 설정
+  API_CONFIG: {
+    endpoint: '/api',
+    apiKey: 'c-terminaal-api-key'  // 실제 환경에서는 더 안전한 키 생성 필요
+  },
+  
+  // 로컬 캐시
+  _postCache: null,
+  _lastFetch: null,
+  
+  // 게시물 생성
+  createPost: async function(title, content, projectId = null) {
+    // 로그인 확인
+    if (!authManager.isLoggedIn()) {
+      return { success: false, message: '게시물을 작성하려면 로그인이 필요합니다.' };
     }
-  };
+    
+    // 입력값 검증
+    if (!title || title.trim() === '') {
+      return { success: false, message: '제목을 입력하세요.' };
+    }
+    
+    if (!content || content.trim() === '') {
+      return { success: false, message: '내용을 입력하세요.' };
+    }
+    
+    try {
+      // 현재 사용자 정보
+      const currentUser = authManager.getCurrentUser();
+      
+      // 게시물 데이터 준비
+      const postData = {
+        title: securityUtils.escapeHTML(title),
+        content: securityUtils.escapeHTML(content),
+        author: {
+          id: currentUser.id,
+          username: currentUser.username,
+          avatar: currentUser.avatar
+        },
+        projectId: projectId
+      };
+      
+      // R2 API로 게시물 생성 요청
+      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Custom-Auth': this.API_CONFIG.apiKey
+        },
+        body: JSON.stringify(postData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || '게시물 작성 중 오류가 발생했습니다.' };
+      }
+      
+      const post = await response.json();
+      
+      // 캐시 무효화
+      this._postCache = null;
+      
+      return { success: true, post };
+    } catch (error) {
+      console.error('게시물 작성 오류:', error);
+      return { success: false, message: '게시물 작성 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 게시물 목록 가져오기
+  getPosts: async function(sortType = 'new', page = 1, limit = 20, useCache = true) {
+    try {
+      // 캐시 사용 (30초 동안)
+      const now = Date.now();
+      if (useCache && this._postCache && this._lastFetch && now - this._lastFetch < 30000) {
+        // 캐시된 포스트를 정렬하여 반환
+        const posts = [...this._postCache];
+        this._sortPosts(posts, sortType);
+        return { success: true, posts };
+      }
+      
+      // R2 API로 게시물 목록 요청
+      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/list?sort=${sortType}&page=${page}&limit=${limit}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || '게시물 목록을 불러오는 중 오류가 발생했습니다.' };
+      }
+      
+      const data = await response.json();
+      
+      // 캐시 업데이트
+      this._postCache = data.posts;
+      this._lastFetch = now;
+      
+      return { success: true, posts: data.posts, pagination: {
+        currentPage: data.page,
+        totalPages: data.totalPages,
+        totalItems: data.total
+      }};
+    } catch (error) {
+      console.error('게시물 목록 로드 오류:', error);
+      
+      // 네트워크 오류 시 로컬 스토리지 폴백 (오프라인 상태를 위한 대체 방안)
+      const fallbackPosts = this._getFallbackPosts();
+      
+      if (fallbackPosts.length > 0) {
+        this._sortPosts(fallbackPosts, sortType);
+        return { success: true, posts: fallbackPosts, isOffline: true };
+      }
+      
+      return { success: false, message: '게시물 목록을 불러오는 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 로컬 스토리지에서 폴백 포스트 가져오기 (오프라인 용)
+  _getFallbackPosts: function() {
+    try {
+      const storedPosts = localStorage.getItem('c-terminal-community-posts');
+      return storedPosts ? JSON.parse(storedPosts) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+  
+  // 포스트 정렬 헬퍼 함수
+  _sortPosts: function(posts, sortType) {
+    switch (sortType) {
+      case 'hot':
+        posts.sort((a, b) => b.likes - a.likes);
+        break;
+      case 'new':
+        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+        break;
+      case 'top':
+        posts.sort((a, b) => (b.comments || 0) - (a.comments || 0));
+        break;
+    }
+    return posts;
+  },
+  
+  // 특정 게시물 가져오기
+  getPost: async function(postId) {
+    try {
+      // R2 API로 게시물 요청
+      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/${postId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || '게시물을 불러오는 중 오류가 발생했습니다.' };
+      }
+      
+      const post = await response.json();
+      return { success: true, post };
+    } catch (error) {
+      console.error('게시물 로드 오류:', error);
+      return { success: false, message: '게시물을 불러오는 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 게시물 좋아요
+  likePost: async function(postId) {
+    // 로그인 확인
+    if (!authManager.isLoggedIn()) {
+      return { success: false, message: '좋아요를 남기려면 로그인이 필요합니다.' };
+    }
+    
+    try {
+      // 현재 사용자 정보
+      const currentUser = authManager.getCurrentUser();
+      
+      // R2 API로 좋아요 요청
+      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Custom-Auth': this.API_CONFIG.apiKey
+        },
+        body: JSON.stringify({ userId: currentUser.id })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || '좋아요 처리 중 오류가 발생했습니다.' };
+      }
+      
+      const result = await response.json();
+      
+      // 캐시 업데이트 (있는 경우)
+      if (this._postCache) {
+        const postIndex = this._postCache.findIndex(p => p.id === postId);
+        if (postIndex !== -1) {
+          this._postCache[postIndex].likes = result.likes;
+        }
+      }
+      
+      return { success: true, likes: result.likes };
+    } catch (error) {
+      console.error('게시물 좋아요 오류:', error);
+      return { success: false, message: '좋아요 처리 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 댓글 작성
+  addComment: async function(postId, content) {
+    // 로그인 확인
+    if (!authManager.isLoggedIn()) {
+      return { success: false, message: '댓글을 작성하려면 로그인이 필요합니다.' };
+    }
+    
+    // 입력값 검증
+    if (!content || content.trim() === '') {
+      return { success: false, message: '댓글 내용을 입력하세요.' };
+    }
+    
+    try {
+      // 현재 사용자 정보
+      const currentUser = authManager.getCurrentUser();
+      
+      // 댓글 데이터 준비
+      const commentData = {
+        content: securityUtils.escapeHTML(content),
+        author: {
+          id: currentUser.id,
+          username: currentUser.username,
+          avatar: currentUser.avatar
+        }
+      };
+      
+      // R2 API로 댓글 작성 요청
+      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/${postId}/comment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Custom-Auth': this.API_CONFIG.apiKey
+        },
+        body: JSON.stringify(commentData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || '댓글 작성 중 오류가 발생했습니다.' };
+      }
+      
+      const comment = await response.json();
+      
+      // 캐시 업데이트 (있는 경우)
+      if (this._postCache) {
+        const postIndex = this._postCache.findIndex(p => p.id === postId);
+        if (postIndex !== -1) {
+          this._postCache[postIndex].comments = (this._postCache[postIndex].comments || 0) + 1;
+        }
+      }
+      
+      return { success: true, comment };
+    } catch (error) {
+      console.error('댓글 작성 오류:', error);
+      return { success: false, message: '댓글 작성 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 사용자별 게시물 가져오기
+  getUserPosts: async function(userId) {
+    try {
+      if (!userId) {
+        return { success: false, message: '사용자 ID가 필요합니다.' };
+      }
+      
+      // R2 API로 사용자 게시물 요청
+      const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/user?userId=${userId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || '사용자 게시물을 불러오는 중 오류가 발생했습니다.' };
+      }
+      
+      const data = await response.json();
+      return { success: true, posts: data.posts };
+    } catch (error) {
+      console.error('사용자 게시물 로드 오류:', error);
+      return { success: false, message: '사용자 게시물을 불러오는 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 초기 데이터 준비 (첫 실행 시)
+  initializePostsIndex: async function() {
+    try {
+      // 기존 로컬 스토리지 데이터 가져오기
+      const storedPosts = localStorage.getItem('c-terminal-community-posts');
+      
+      if (storedPosts) {
+        const posts = JSON.parse(storedPosts);
+        
+        // 이미 데이터가 R2에 있는지 확인
+        const response = await fetch(`${this.API_CONFIG.endpoint}/community/posts/list?limit=1`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // R2에 데이터가 없고 로컬에 데이터가 있으면 마이그레이션
+          if (data.total === 0 && posts.length > 0) {
+            console.log('로컬 스토리지 게시물을 R2로 마이그레이션합니다...');
+            
+            // 각 포스트를 R2에 저장
+            for (const post of posts) {
+              await this.createPost(post.title, post.content, post.projectId);
+            }
+            
+            console.log('마이그레이션 완료!');
+          }
+        }
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('커뮤니티 초기화 오류:', error);
+      return { success: false, message: '커뮤니티 초기화 중 오류가 발생했습니다.' };
+    }
+  },
+  
+  // 정기적인 데이터 폴백 저장 (오프라인 지원용)
+  scheduleLocalBackup: function() {
+    const backupInterval = 5 * 60 * 1000; // 5분마다
+    
+    const runBackup = async () => {
+      try {
+        // 최신 포스트 목록 가져오기
+        const result = await this.getPosts('new', 1, 50, false);
+        
+        if (result.success) {
+          // 로컬 스토리지에 백업
+          localStorage.setItem('c-terminal-community-posts', JSON.stringify(result.posts));
+          console.log('커뮤니티 데이터 로컬 백업 완료');
+        }
+      } catch (error) {
+        console.error('로컬 백업 오류:', error);
+      }
+    };
+    
+    // 초기 백업 실행
+    runBackup();
+    
+    // 정기적인 백업 일정 설정
+    setInterval(runBackup, backupInterval);
+  }
+};
   
   // 프로젝트 관리 모듈
   const projectManager = {
