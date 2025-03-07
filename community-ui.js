@@ -8,68 +8,152 @@ const communityUI = {
     pollingInterval: null,
     
     // 커뮤니티 페이지 초기화
+    // community-ui.js의 init 함수 수정
+    // 이 함수로 교체하세요
+
+    // community-ui.js의 init 함수 수정
+    // 이 함수로 교체하세요
+
     init: function() {
-      // 게시물 목록 로드
-      this.loadPosts();
-      
-      // 탭 이벤트 리스너 등록
-      document.querySelectorAll('.community-tabs .tab-btn').forEach(tab => {
-        tab.addEventListener('click', () => {
-          // 탭 클래스 변경
-          document.querySelectorAll('.community-tabs .tab-btn').forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          
-          // 정렬 유형 저장
-          this.currentSort = tab.dataset.tab;
-          this.currentPage = 1;
-          
-          // 게시물 다시 로드
-          this.loadPosts();
+        try {
+        // 게시물 목록 로드
+        this.loadPosts();
+        
+        // 탭 이벤트 리스너 등록
+        document.querySelectorAll('.community-tabs .tab-btn').forEach(tab => {
+            tab.addEventListener('click', () => {
+            // 탭 클래스 변경
+            document.querySelectorAll('.community-tabs .tab-btn').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // 정렬 유형 저장
+            this.currentSort = tab.dataset.tab;
+            this.currentPage = 1;
+            
+            // 게시물 다시 로드
+            this.loadPosts();
+            });
         });
-      });
-      
-      // 검색 버튼 이벤트
-      const searchBtn = document.getElementById('search-btn');
-      if (searchBtn) {
-        searchBtn.addEventListener('click', () => {
-          this.searchPosts();
-        });
-      }
-      
-      // 엔터 키로 검색
-      const searchInput = document.getElementById('community-search');
-      if (searchInput) {
-        searchInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
+        
+        // 검색 버튼 이벤트
+        const searchBtn = document.getElementById('search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
             this.searchPosts();
-          }
-        });
-      }
-      
-      // 새 게시물 버튼 이벤트
-      const newPostBtn = document.getElementById('new-post-btn');
-      if (newPostBtn) {
-        newPostBtn.addEventListener('click', () => this.openNewPostModal());
-      }
-      
-      // 게시물 제출 버튼 이벤트
-      const submitPostBtn = document.getElementById('submit-post-btn');
-      if (submitPostBtn) {
-        submitPostBtn.addEventListener('click', () => this.submitNewPost());
-      }
-      
-      // 처음 진입 시 데이터 마이그레이션 (로컬스토리지 -> R2)
-      communityManager.initializePostsIndex().then(result => {
-        if (result.success) {
-          console.log('커뮤니티 초기화 완료');
+            });
         }
-      });
-      
-      // 실시간 업데이트 시작
-      this.startPolling();
-      
-      // 오프라인 지원을 위한 로컬 백업 일정 설정
-      communityManager.scheduleLocalBackup();
+        
+        // 엔터 키로 검색
+        const searchInput = document.getElementById('community-search');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.searchPosts();
+            }
+            });
+        }
+        
+        // 새 게시물 버튼 이벤트
+        const newPostBtn = document.getElementById('new-post-btn');
+        if (newPostBtn) {
+            newPostBtn.addEventListener('click', () => this.openNewPostModal());
+        }
+        
+        // 게시물 제출 버튼 이벤트
+        const submitPostBtn = document.getElementById('submit-post-btn');
+        if (submitPostBtn) {
+            submitPostBtn.addEventListener('click', () => this.submitNewPost());
+        }
+        
+        // 샘플 게시물 데이터 확인 및 생성
+        this.ensureSamplePosts();
+        
+        // 실시간 업데이트 시작
+        this.startPolling();
+        
+        // 오프라인 지원을 위한 로컬 백업 일정 설정
+        if (window.communityManager && typeof window.communityManager.scheduleLocalBackup === 'function') {
+            try {
+            window.communityManager.scheduleLocalBackup();
+            } catch (e) {
+            console.warn('로컬 백업 설정 실패:', e);
+            }
+        }
+        
+        console.log('커뮤니티 초기화 완료');
+        } catch (error) {
+        console.error('커뮤니티 초기화 오류:', error);
+        }
+    },
+    
+    // 샘플 게시물 데이터 확인 및 생성 (처음 실행 시)
+    ensureSamplePosts: function() {
+        try {
+        // 로컬 스토리지에서 게시물 데이터 확인
+        const storedPosts = localStorage.getItem('c-terminal-community-posts');
+        let posts = [];
+        
+        if (storedPosts) {
+            posts = JSON.parse(storedPosts);
+        }
+        
+        // 게시물이 없으면 샘플 데이터 생성
+        if (!posts || posts.length === 0) {
+            // 샘플 사용자
+            const sampleUser = {
+            id: 'sample_user_1',
+            username: '관리자',
+            avatar: 'img/default-avatar.svg'
+            };
+            
+            // 샘플 게시물 생성
+            const samplePosts = [
+            {
+                id: 'post_' + Date.now() + '_sample1',
+                title: 'C-Terminal에 오신 것을 환영합니다!',
+                content: '# 환영합니다!\n\nC-Terminal 커뮤니티에 오신 것을 환영합니다. 이곳에서 여러분의 프로젝트와 아이디어를 공유해보세요.\n\n* 코드 블록을 공유하고\n* 질문을 하고\n* 다른 사용자들과 소통해보세요!',
+                author: sampleUser,
+                date: new Date().toISOString(),
+                likes: 5,
+                comments: 1,
+                commentList: [
+                {
+                    id: 'comment_' + Date.now() + '_sample1',
+                    content: '환영합니다! 좋은 시간 되세요.',
+                    author: sampleUser,
+                    date: new Date().toISOString()
+                }
+                ]
+            },
+            {
+                id: 'post_' + Date.now() + '_sample2',
+                title: '블록 코딩 팁 공유',
+                content: '블록 코딩을 더 효율적으로 하는 팁을 공유합니다:\n\n1. 자주 사용하는 블록은 그룹으로 만들어두세요\n2. 함수를 활용하면 코드를 재사용할 수 있습니다\n3. 주석을 활용해 코드를 설명하세요',
+                author: sampleUser,
+                date: new Date(Date.now() - 86400000).toISOString(), // 하루 전
+                likes: 3,
+                comments: 0,
+                commentList: []
+            },
+            {
+                id: 'post_' + Date.now() + '_sample3',
+                title: '터미널 출력 꾸미기',
+                content: '터미널 출력을 더 멋지게 만드는 방법:\n\n- 색상 블록을 활용해보세요\n- 진행 표시줄로 진행 상황을 표시할 수 있습니다\n- 테이블 블록으로 데이터를 깔끔하게 정리할 수 있습니다',
+                author: sampleUser,
+                date: new Date(Date.now() - 172800000).toISOString(), // 이틀 전
+                likes: 2,
+                comments: 0,
+                commentList: []
+            }
+            ];
+            
+            // 로컬 스토리지에 저장
+            localStorage.setItem('c-terminal-community-posts', JSON.stringify(samplePosts));
+            console.log('샘플 게시물 데이터가 생성되었습니다.');
+        }
+        } catch (error) {
+        console.error('샘플 데이터 생성 오류:', error);
+        }
     },
     
     // 게시물 목록 로드
@@ -803,74 +887,144 @@ const communityUI = {
     },
     
     // 새 게시물 작성
+    // community-ui.js 파일의 submitNewPost 함수 수정
+    // 이 함수로 교체하세요
+
     submitNewPost: async function() {
-      // 로그인 확인
-      if (!authManager.isLoggedIn()) {
+        // 로그인 확인
+        if (!authManager.isLoggedIn()) {
         alert('게시물을 작성하려면 로그인이 필요합니다.');
+        closeCurrentModal();
         return;
-      }
-      
-      // 입력값 가져오기
-      const title = document.getElementById('post-title').value.trim();
-      const content = document.getElementById('post-content').value.trim();
-      const attachProject = document.getElementById('attach-project').checked;
-      
-      // 유효성 검사
-      if (!title) {
+        }
+        
+        // 입력값 가져오기
+        const title = document.getElementById('post-title').value.trim();
+        const content = document.getElementById('post-content').value.trim();
+        
+        // 유효성 검사
+        if (!title) {
         alert('제목을 입력해주세요.');
+        document.getElementById('post-title').focus();
         return;
-      }
-      
-      if (!content) {
+        }
+        
+        if (!content) {
         alert('내용을 입력해주세요.');
+        document.getElementById('post-content').focus();
         return;
-      }
-      
-      // 현재 프로젝트 ID (프로젝트 첨부 옵션 선택 시)
-      const projectId = attachProject && projectManager.currentProject ? 
-                        projectManager.currentProject.id : null;
-      
-      try {
+        }
+        
+        // 첨부 프로젝트 체크박스
+        const attachProject = document.getElementById('attach-project');
+        const attachChecked = attachProject ? attachProject.checked : false;
+        
+        // 현재 프로젝트 ID (프로젝트 첨부 옵션 선택 시)
+        let projectId = null;
+        if (attachChecked && window.projectManager && window.projectManager.currentProject) {
+        projectId = window.projectManager.currentProject.id;
+        }
+        
+        try {
         // 제출 버튼 비활성화
         const submitBtn = document.getElementById('submit-post-btn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = '게시 중...';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '게시 중...';
+        }
         
         // 게시물 API 호출
-        const result = await communityManager.createPost(title, content, projectId);
+        let result;
         
-        if (result.success) {
-          // 모달 닫기
-          closeCurrentModal();
-          
-          // 게시물 목록 새로고침
-          this.currentPage = 1;
-          this.currentSort = 'new'; // 새 글 모드로 변경
-          
-          // 탭 UI 업데이트
-          document.querySelectorAll('.community-tabs .tab-btn').forEach(tab => {
+        try {
+            // API 사용 시도
+            if (window.communityManager && typeof window.communityManager.createPost === 'function') {
+            result = await window.communityManager.createPost(title, content, projectId);
+            } else {
+            throw new Error('커뮤니티 관리자를 찾을 수 없습니다.');
+            }
+        } catch (apiError) {
+            console.error('API 호출 실패:', apiError);
+            
+            // 대체 로직 - 로컬 저장소에 직접 저장
+            const currentUser = window.authManager.getCurrentUser();
+            const newPost = {
+            id: 'post_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15),
+            title: title,
+            content: content,
+            author: {
+                id: currentUser.id,
+                username: currentUser.username,
+                avatar: currentUser.avatar
+            },
+            date: new Date().toISOString(),
+            likes: 0,
+            comments: 0,
+            projectId: projectId
+            };
+            
+            // 로컬 스토리지에 저장
+            let posts = [];
+            try {
+            const storedPosts = localStorage.getItem('c-terminal-community-posts');
+            posts = storedPosts ? JSON.parse(storedPosts) : [];
+            } catch (e) {
+            posts = [];
+            }
+            
+            posts.push(newPost);
+            localStorage.setItem('c-terminal-community-posts', JSON.stringify(posts));
+            
+            result = { success: true, post: newPost };
+        }
+        
+        if (result && result.success) {
+            // 모달 닫기
+            closeCurrentModal();
+            
+            // 폼 초기화
+            const titleInput = document.getElementById('post-title');
+            const contentInput = document.getElementById('post-content');
+            if (titleInput) titleInput.value = '';
+            if (contentInput) contentInput.value = '';
+            
+            // 프로젝트 첨부 체크박스 초기화
+            if (attachProject) attachProject.checked = false;
+            
+            // 게시물 목록 새로고침
+            this.currentPage = 1;
+            this.currentSort = 'new'; // 새 글 모드로 변경
+            
+            // 탭 UI 업데이트
+            document.querySelectorAll('.community-tabs .tab-btn').forEach(tab => {
             tab.classList.remove('active');
             if (tab.dataset.tab === 'new') {
-              tab.classList.add('active');
+                tab.classList.add('active');
             }
-          });
-          
-          await this.loadPosts();
-          
-          // 성공 메시지
-          this.showSuccessMessage('게시물이 성공적으로 작성되었습니다.');
+            });
+            
+            // 게시물 목록 다시 로드
+            setTimeout(() => {
+            this.loadPosts();
+            
+            // 성공 메시지
+            this.showSuccessMessage('게시물이 성공적으로 작성되었습니다.');
+            }, 300);
         } else {
-          alert(result.message);
+            const errorMsg = result && result.message ? result.message : '게시물 작성 중 오류가 발생했습니다.';
+            alert(errorMsg);
         }
-      } catch (error) {
+        } catch (error) {
         console.error('게시물 작성 오류:', error);
         alert('게시물 작성 중 오류가 발생했습니다.');
-      } finally {
+        } finally {
         // 버튼 상태 복원
         const submitBtn = document.getElementById('submit-post-btn');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '게시';
-      }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '게시';
+        }
+        }
     },
     
     // 업데이트 폴링 시작
