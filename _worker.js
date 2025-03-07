@@ -284,12 +284,17 @@ async function handleCommunityRequest(request, env, path, corsHeaders) {
       // 특정 게시물 가져오기
       const postId = path.split('/').pop();
       
-      // 'post_' 접두사가 이미 포함되어 있는지 확인
-      const postPath = postId.startsWith('post_') 
-      ? `community/posts/${postId}.json` 
-      : `community/posts/post_${postId}.json`;
+      // 두 가지 가능한 경로 시도
+      let postObject = await env.R2_BUCKET.get(`community/posts/${postId}.json`);
       
-      const postObject = await env.R2_BUCKET.get(postPath);
+      // 첫 번째 경로에서 찾지 못한 경우 두 번째 경로 시도
+      if (!postObject) {
+        const alternativePath = postId.startsWith('post_') 
+          ? `community/posts/${postId}.json` 
+          : `community/posts/post_${postId}.json`;
+        
+        postObject = await env.R2_BUCKET.get(alternativePath);
+      }
       
       if (!postObject) {
         return new Response(JSON.stringify({ error: "Post not found" }), {
